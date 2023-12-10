@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk/usr/include/"
+            ],
+            "cStandard": "c99"
+        }
+    ],
+    "version": 4
+}
