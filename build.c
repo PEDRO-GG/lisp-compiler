@@ -88,10 +88,6 @@ void compile(char *name) {
   char srcfile[100];
   prepend(srcfile, CODE_DIR, name);
 
-  // Build up the command
-  char *const cmd[] = {CC, srcfile, CFLAGS, "-o", outfile, NULL};
-  print_cmd(cmd);
-
   // Run the command in a child process
   pid_t pid = fork();
   if (pid == -1) {
@@ -100,16 +96,15 @@ void compile(char *name) {
     exit(EXIT_FAILURE);
   } else if (pid == 0) {
     // Child process
+    char *const cmd[] = {CC, srcfile, CFLAGS, "-o", outfile, NULL};
+    print_cmd(cmd);
     if (execvp(CC, cmd) == -1) {
       perror("failed to compile");
       exit(EXIT_FAILURE);
     }
   } else {
     // Parent process
-    int status;
-    waitpid(pid, &status,
-            0);  // Optionally wait for the child process to finish
-    printf("Continuing execution in the parent process.\n");
+    wait(NULL);  // Ensure parent is halted until child is done running
   }
 }
 
