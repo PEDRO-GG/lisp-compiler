@@ -109,11 +109,41 @@ void compile(char *name) {
 }
 
 void build_exe(void) {
-  char *const cmd[] = {CC, "./obj/*", "-o", "./bin/main", NULL};
+  // Setup the command
+  char **cmd = malloc(20 * sizeof(char *));
+  if (cmd == NULL) {
+    printf("unable to allocate memory\n");
+  }
+  cmd[0] = CC;
+
+  // Open the obj directory
+  DIR *dir = opendir(OBJ_DIR);
+  if (dir == NULL) {
+    perror("opendir failed");
+  }
+
+  // Append each obj to the command
+  int i = 1;
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (ends_with(entry->d_name, ".o")) {
+      // Prepend obj/
+      char outfile[100];
+      prepend(outfile, OBJ_DIR, entry->d_name);
+      // Append to command
+      cmd[i] = outfile;
+      i++;
+    }
+  }
+
+  // Append the remaining flags
+  cmd[i++] = "-o";
+  cmd[i++] = "./bin/main";
+  cmd[i++] = NULL;
   print_cmd(cmd);
-  //   if (execvp(CC, cmd) == -1) {
-  //     perror("failed to link");
-  //   }
+  if (execvp(CC, cmd) == -1) {
+    perror("failed to link");
+  }
 }
 
 int main(void) {
