@@ -45,10 +45,12 @@ typedef struct Token {
   TokenType type;
   union {
     int64_t num;
-    uint8_t identifier;
-    uint8_t string;
+    uint8_t* identifier;
+    uint8_t* string;
     struct Token* list;
   } value;
 } Token;
+
+void to_string(Token* t, char* buffer);
 
 #endif  // TOKEN_H

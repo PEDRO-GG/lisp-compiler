@@ -50,6 +50,7 @@
         "unordered_map": "c",
         "variant": "c",
         "vector": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "cstdio": "c"
     }
 }

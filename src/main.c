@@ -3,6 +3,8 @@
 #include "token.h"
 
 int main(void) {
-  Token t = {.type = TOKEN_NUM, .value.num = 5.};
-  printf("type: %d, value: %lld\n", t.type, t.value.num);
+  Token t = {.type = TOKEN_NUM, .value.num = 500};
+  char buffer[100];
+  to_string(&t, buffer);
+  printf("%s\n", buffer);
 }

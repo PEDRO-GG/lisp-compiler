@@ -128,7 +128,7 @@ void build_exe(void) {
   while ((entry = readdir(dir)) != NULL) {
     if (ends_with(entry->d_name, ".o")) {
       // Prepend obj/
-      char outfile[100];
+      char *outfile = malloc(100 * sizeof(char));
       prepend(outfile, OBJ_DIR, entry->d_name);
       // Append to command
       cmd[i] = outfile;
