@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void to_string(Token* t, char* buffer) {
@@ -10,147 +11,195 @@ void to_string(Token* t, char* buffer) {
 
   switch (t->type) {
     case TOKEN_NUM: {
-      sprintf(buffer, "%lld", t->value.num);
+      char num[100];
+      sprintf(num, "%lld", t->value.num);
+      strcat(buffer, num);
       break;
     }
     case TOKEN_CALL: {
-      strcpy(buffer, "call");
+      strcat(buffer, "call");
       break;
     }
     case TOKEN_LPAREN: {
-      strcpy(buffer, "(");
+      strcat(buffer, "(");
       break;
     }
     case TOKEN_RPAREN: {
-      strcpy(buffer, ")");
+      strcat(buffer, ")");
       break;
     }
     case TOKEN_PRINT: {
-      strcpy(buffer, "print");
+      strcat(buffer, "print");
       break;
     }
     case TOKEN_IDENTIFIER: {
-      strcpy(buffer, (char*)t->value.identifier);
+      strcat(buffer, (char*)t->value.identifier);
       break;
     }
     case TOKEN_STRING: {
-      strcpy(buffer, (char*)t->value.string);
+      strcat(buffer, (char*)t->value.string);
       break;
     }
     case TOKEN_DO: {
-      strcpy(buffer, "do");
+      strcat(buffer, "do");
       break;
     }
     case TOKEN_DEF: {
-      strcpy(buffer, "def");
+      strcat(buffer, "def");
       break;
     }
     case TOKEN_TRUE: {
-      strcpy(buffer, "true");
+      strcat(buffer, "true");
       break;
     }
     case TOKEN_FALSE: {
-      strcpy(buffer, "false");
+      strcat(buffer, "false");
       break;
     }
     case TOKEN_THEN: {
-      strcpy(buffer, "then");
+      strcat(buffer, "then");
       break;
     }
     case TOKEN_ELSE: {
-      strcpy(buffer, "else");
+      strcat(buffer, "else");
       break;
     }
     case TOKEN_LOOP: {
-      strcpy(buffer, "loop");
+      strcat(buffer, "loop");
       break;
     }
     case TOKEN_BREAK: {
-      strcpy(buffer, "break");
+      strcat(buffer, "break");
       break;
     }
     case TOKEN_RETURN: {
-      strcpy(buffer, "return");
+      strcat(buffer, "return");
       break;
     }
     case TOKEN_TERNARY: {
-      strcpy(buffer, "?");
+      strcat(buffer, "?");
       break;
     }
     case TOKEN_VAR: {
-      strcpy(buffer, "var");
+      strcat(buffer, "var");
       break;
     }
     case TOKEN_SET: {
-      strcpy(buffer, "set");
+      strcat(buffer, "set");
       break;
     }
     case TOKEN_IF: {
-      strcpy(buffer, "if");
+      strcat(buffer, "if");
       break;
     }
     case TOKEN_GT: {
-      strcpy(buffer, "gt");
+      strcat(buffer, "gt");
       break;
     }
     case TOKEN_LE: {
-      strcpy(buffer, "le");
+      strcat(buffer, "le");
       break;
     }
     case TOKEN_EQ: {
-      strcpy(buffer, "eq");
+      strcat(buffer, "eq");
       break;
     }
     case TOKEN_NE: {
-      strcpy(buffer, "ne");
+      strcat(buffer, "ne");
       break;
     }
     case TOKEN_GE: {
-      strcpy(buffer, "ge");
+      strcat(buffer, "ge");
       break;
     }
     case TOKEN_LT: {
-      strcpy(buffer, "lt");
+      strcat(buffer, "lt");
       break;
     }
     case TOKEN_AND: {
-      strcpy(buffer, "and");
+      strcat(buffer, "and");
       break;
     }
     case TOKEN_OR: {
-      strcpy(buffer, "or");
+      strcat(buffer, "or");
       break;
     }
     case TOKEN_ADD: {
-      strcpy(buffer, "+");
+      strcat(buffer, "+");
       break;
     }
     case TOKEN_MINUS: {
-      strcpy(buffer, "-");
+      strcat(buffer, "-");
       break;
     }
     case TOKEN_MULT: {
-      strcpy(buffer, "*");
+      strcat(buffer, "*");
       break;
     }
     case TOKEN_DIV: {
-      strcpy(buffer, "/");
+      strcat(buffer, "/");
       break;
     }
     case TOKEN_MODULO: {
-      strcpy(buffer, "%");
+      strcat(buffer, "%");
       break;
     }
     case TOKEN_LIST: {
-      strcpy(buffer, "list");
+      for (uint64_t i = 0; i < LENGTH(t); i++) {
+        to_string(DATA(t)[i], buffer);
+        strcat(buffer, " ");
+      }
       break;
     }
     case TOKEN_ILLEGAL: {
-      strcpy(buffer, "illegal");
+      strcat(buffer, "illegal");
       break;
     }
-
     default:
       break;
   }
+}
+
+Token* token_list_make(TokenError* err) {
+  Token* tkn = malloc(sizeof(Token));
+  if (tkn == NULL) {
+    *err = TOKEN_ERROR_MALLOC;
+    return NULL;
+  }
+
+  uint64_t capacity = 10;
+  Token** data = malloc(sizeof(Token*) * capacity);
+  if (data == NULL) {
+    *err = TOKEN_ERROR_MALLOC;
+    return NULL;
+  }
+
+  tkn->type = TOKEN_LIST;
+  tkn->value.list = (Tokens){
+      .data = data,
+      .capacity = capacity,
+      .length = 0,
+  };
+  *err = TOKEN_ERROR_NIL;
+  return tkn;
+}
+
+TokenError token_list_append(Token* list, Token* token) {
+  assert(list != NULL);
+  assert(list->type == TOKEN_LIST);
+
+  // Request more memory if capacity is exceeded
+  if (LENGTH(list) >= CAPACITY(list)) {
+    uint64_t increase = 10;
+    struct Token** tmp = realloc(DATA(list), sizeof(struct Token) * increase);
+    if (tmp == NULL) {
+      return TOKEN_ERROR_REALLOC;
+    }
+    DATA(list) = tmp;
+    CAPACITY(list) = CAPACITY(list) + increase;
+  }
+
+  // Append the token
+  list->value.list.data[LENGTH(list)++] = token;
+  return TOKEN_ERROR_NIL;
 }

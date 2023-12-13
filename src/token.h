@@ -41,15 +41,35 @@ typedef enum {
   TOKEN_ILLEGAL,
 } TokenType;
 
+typedef enum {
+  TOKEN_ERROR_MALLOC,
+  TOKEN_ERROR_REALLOC,
+  TOKEN_ERROR_APPEND,
+  TOKEN_ERROR_NIL,
+} TokenError;
+
+typedef struct Tokens {
+  struct Token** data;
+  uint64_t capacity;
+  uint64_t length;
+} Tokens;
+
 typedef struct Token {
   TokenType type;
   union {
     int64_t num;
     uint8_t* identifier;
     uint8_t* string;
-    struct Token* list;
+    Tokens list;
   } value;
 } Token;
+
+#define CAPACITY(x) ((x)->value.list.capacity)
+#define LENGTH(x) ((x)->value.list.length)
+#define DATA(x) ((x)->value.list.data)
+
+Token* token_list_make(TokenError* err);
+TokenError token_list_append(Token* list, Token* token);
 
 void to_string(Token* t, char* buffer);
 
