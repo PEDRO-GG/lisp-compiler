@@ -79,7 +79,7 @@ typedef struct Token {
 Token* token_list_make(TokenError* err);
 TokenError token_list_append(Token* list, Token* token);
 
-void to_string(Token* t, char* buffer);
+void token_to_string(Token* t, char* buffer);
 
 Token* parse(const char* input, uint64_t* idx, TokenError* err);
 

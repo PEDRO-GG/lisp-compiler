@@ -13,6 +13,6 @@ int main(void) {
   }
 
   char buffer[100];
-  to_string(tkn, buffer);
+  token_to_string(tkn, buffer);
   printf("%s\n", buffer);
 }

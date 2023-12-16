@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void to_string(Token* t, char* buffer) {
+void token_to_string(Token* t, char* buffer) {
   assert(t != NULL);
   assert(buffer != NULL);
 
@@ -153,7 +153,7 @@ void to_string(Token* t, char* buffer) {
     case TOKEN_LIST: {
       strcat(buffer, "(");
       for (uint64_t i = 0; i < LENGTH(t); i++) {
-        to_string(DATA(t)[i], buffer);
+        token_to_string(DATA(t)[i], buffer);
         if (i < LENGTH(t) - 1) {
           strcat(buffer, " ");
         }
