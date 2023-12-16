@@ -45,6 +45,9 @@ typedef enum {
   TOKEN_ERROR_MALLOC,
   TOKEN_ERROR_REALLOC,
   TOKEN_ERROR_APPEND,
+  TOKEN_ERROR_UNBALANCED_PARENS,
+  TOKEN_ERROR_EXPECTED_LPAREN,
+  TOKEN_ERROR_EMPTY_PROGRAM,
   TOKEN_ERROR_NIL,
 } TokenError;
 
@@ -54,12 +57,17 @@ typedef struct Tokens {
   uint64_t length;
 } Tokens;
 
+typedef struct FatStr {
+  const uint8_t* start;
+  uint64_t length;
+} FatStr;
+
 typedef struct Token {
   TokenType type;
   union {
     int64_t num;
-    uint8_t* identifier;
-    uint8_t* string;
+    FatStr identifier;
+    FatStr string;
     Tokens list;
   } value;
 } Token;
@@ -72,5 +80,7 @@ Token* token_list_make(TokenError* err);
 TokenError token_list_append(Token* list, Token* token);
 
 void to_string(Token* t, char* buffer);
+
+Token* parse(const char* input, uint64_t* idx, TokenError* err);
 
 #endif  // TOKEN_H

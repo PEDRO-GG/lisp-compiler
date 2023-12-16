@@ -1,6 +1,9 @@
 #include "token.h"
 
 #include <assert.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,11 +36,14 @@ void to_string(Token* t, char* buffer) {
       break;
     }
     case TOKEN_IDENTIFIER: {
-      strcat(buffer, (char*)t->value.identifier);
+      strncat(buffer, (char*)t->value.identifier.start,
+              t->value.identifier.length);
+      strcat(buffer, "\0");
       break;
     }
     case TOKEN_STRING: {
-      strcat(buffer, (char*)t->value.string);
+      strncat(buffer, (char*)t->value.string.start, t->value.string.length);
+      strcat(buffer, "\0");
       break;
     }
     case TOKEN_DO: {
@@ -145,10 +151,14 @@ void to_string(Token* t, char* buffer) {
       break;
     }
     case TOKEN_LIST: {
+      strcat(buffer, "(");
       for (uint64_t i = 0; i < LENGTH(t); i++) {
         to_string(DATA(t)[i], buffer);
-        strcat(buffer, " ");
+        if (i < LENGTH(t) - 1) {
+          strcat(buffer, " ");
+        }
       }
+      strcat(buffer, ")");
       break;
     }
     case TOKEN_ILLEGAL: {
@@ -202,4 +212,151 @@ TokenError token_list_append(Token* list, Token* token) {
   // Append the token
   list->value.list.data[LENGTH(list)++] = token;
   return TOKEN_ERROR_NIL;
+}
+
+void skip_space(const char* input, uint64_t* idx) {
+  while (isspace(input[*idx])) {
+    (*idx)++;
+  }
+}
+
+Token* parse_num(const char* input, uint64_t* idx, TokenError* err) {
+  int64_t num = 0;
+  while (isdigit(input[*idx])) {
+    num *= 10;                // Left shift
+    num += input[*idx] - 48;  // Append digit
+    (*idx)++;                 // Move to next digit
+  }
+
+  Token* tkn = malloc(sizeof(Token));
+  if (tkn == NULL) {
+    *err = TOKEN_ERROR_MALLOC;
+    return NULL;
+  }
+
+  tkn->type = TOKEN_NUM;
+  tkn->value.num = num;
+
+  return tkn;
+}
+
+Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
+  uint64_t n = 0;
+  const char* start = input;
+  while (isalpha(input[*idx]) || input[*idx] == '+' || input[*idx] == '-' ||
+         input[*idx] == '*' || input[*idx] == '/' || input[*idx] == '?') {
+    (*idx)++;
+    n++;
+  }
+
+  Token* tkn = malloc(sizeof(Token));
+  if (tkn == NULL) {
+    *err = TOKEN_ERROR_MALLOC;
+    return NULL;
+  }
+
+  if (strncmp(input, "call", n) == 0) {
+    tkn->type = TOKEN_CALL;
+  } else if (strncmp(input, "print", n) == 0) {
+    tkn->type = TOKEN_PRINT;
+  } else if (strncmp(input, "do", n) == 0) {
+    tkn->type = TOKEN_DO;
+  } else if (strncmp(input, "def", n) == 0) {
+    tkn->type = TOKEN_DEF;
+  } else if (strncmp(input, "then", n) == 0) {
+    tkn->type = TOKEN_THEN;
+  } else if (strncmp(input, "else", n) == 0) {
+    tkn->type = TOKEN_ELSE;
+  } else if (strncmp(input, "loop", n) == 0) {
+    tkn->type = TOKEN_LOOP;
+  } else if (strncmp(input, "break", n) == 0) {
+    tkn->type = TOKEN_BREAK;
+  } else if (strncmp(input, "return", n) == 0) {
+    tkn->type = TOKEN_RETURN;
+  } else if (strncmp(input, "var", n) == 0) {
+    tkn->type = TOKEN_VAR;
+  } else if (strncmp(input, "set", n) == 0) {
+    tkn->type = TOKEN_SET;
+  } else if (strncmp(input, "if", n) == 0) {
+    tkn->type = TOKEN_IF;
+  } else if (strncmp(input, "true", n) == 0) {
+    tkn->type = TOKEN_TRUE;
+  } else if (strncmp(input, "false", n) == 0) {
+    tkn->type = TOKEN_FALSE;
+  } else if (strncmp(input, "?", n) == 0) {
+    tkn->type = TOKEN_TERNARY;
+  } else if (strncmp(input, "gt", n) == 0) {
+    tkn->type = TOKEN_GT;
+  } else if (strncmp(input, "le", n) == 0) {
+    tkn->type = TOKEN_LE;
+  } else if (strncmp(input, "lt", n) == 0) {
+    tkn->type = TOKEN_LT;
+  } else if (strncmp(input, "+", n) == 0) {
+    tkn->type = TOKEN_ADD;
+  } else if (strncmp(input, "-", n) == 0) {
+    tkn->type = TOKEN_MINUS;
+  } else if (strncmp(input, "*", n) == 0) {
+    tkn->type = TOKEN_MULT;
+  } else {
+    tkn->type = TOKEN_IDENTIFIER;
+    tkn->value.identifier = (FatStr){
+        .start = (const uint8_t*)start,
+        .length = n,
+    };
+  }
+
+  return tkn;
+}
+
+Token* parse_value(const char* input, uint64_t* idx, TokenError* err) {
+  if (isdigit(input[*idx])) {
+    return parse_num(input, idx, err);
+  }
+
+  return parse_chars(input, idx, err);
+}
+
+Token* parse(const char* input, uint64_t* idx, TokenError* err) {
+  assert(input != NULL);
+  assert(err != NULL);
+
+  skip_space(input, idx);
+
+  if (input[*idx] == '(') {
+    (*idx)++;
+
+    Token* parent_list = token_list_make(err);
+    if (*err != TOKEN_ERROR_NIL) {
+      return NULL;
+    }
+
+    while (true) {
+      skip_space(input, idx);
+
+      if (input[*idx] == '\0') {
+        *err = TOKEN_ERROR_UNBALANCED_PARENS;
+      }
+
+      if (input[*idx] == ')') {
+        (*idx)++;
+        break;
+      }
+
+      Token* child_list = parse(input, idx, err);
+      if (*err != TOKEN_ERROR_NIL) {
+        return NULL;
+      }
+
+      token_list_append(parent_list, child_list);
+
+      return parent_list;
+    }
+  } else if (input[*idx] == ')') {
+    *err = TOKEN_ERROR_EXPECTED_LPAREN;
+    return NULL;
+  } else if (input[*idx] == '\0') {
+    *err = TOKEN_ERROR_EMPTY_PROGRAM;
+    return NULL;
+  }
+  return parse_value(input, idx, err);
 }

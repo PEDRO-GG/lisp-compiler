@@ -51,6 +51,7 @@
         "variant": "c",
         "vector": "c",
         "stdbool.h": "c",
-        "cstdio": "c"
+        "cstdio": "c",
+        "cctype": "c"
     }
 }
