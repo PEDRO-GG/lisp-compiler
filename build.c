@@ -96,15 +96,25 @@ void compile(char *name) {
     exit(EXIT_FAILURE);
   } else if (pid == 0) {
     // Child process
-    char *const cmd[] = {CC, srcfile, CFLAGS, "-o", outfile, NULL};
+    char *const cmd[] = {CC, CFLAGS, srcfile, "-o", outfile, NULL};
     print_cmd(cmd);
-    if (execvp(CC, cmd) == -1) {
-      perror("failed to compile");
-      exit(EXIT_FAILURE);
-    }
+    execvp(CC, cmd);
+
+    // If execvp returns, an error occurred
+    perror("failed to compile");
+    exit(EXIT_FAILURE);
   } else {
     // Parent process
-    wait(NULL);  // Ensure parent is halted until child is done running
+    int status;
+    waitpid(pid, &status, 0);  // Wait for the child process to finish
+
+    if (WIFEXITED(status)) {
+      int exit_status = WEXITSTATUS(status);
+      if (exit_status != 0) {
+        printf("Child process exited with error status %d\n", exit_status);
+        exit(EXIT_FAILURE);
+      }
+    }
   }
 }
 
