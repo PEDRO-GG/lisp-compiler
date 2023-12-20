@@ -9,14 +9,19 @@ void test_parse(void) {
     Token expected_token;
   } ParseTest;
 
+  TokenError err;
+  Token* list1 = token_list_make(&err);
+  TKN_PANIC(err);
+  err = token_list_append(list1, &(Token){
+                                     .type = TOKEN_NUM,
+                                     .value.num = 123,
+                                 });
+  TKN_PANIC(err);
+
   ParseTest tests[] = {
       {
           .input = "  (  123  )  ",
-          .expected_token =
-              {
-                  .type = TOKEN_NUM,
-                  .value.num = 123,
-              },
+          .expected_token = *list1,
           .expected_str = "  (  1234  )  ",
       },
       {
@@ -37,6 +42,7 @@ void test_parse(void) {
     Token* tkn = parse(tst.input, &idx, &err);
 
     TEST_ASSERT(err == TOKEN_ERROR_NIL);
+    TEST_ASSERT(tkncmp(tkn, &tst.expected_token));
 
     char buffer[100];
     token_to_string(tkn, buffer);

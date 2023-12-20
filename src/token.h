@@ -1,6 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef enum {
@@ -79,8 +80,15 @@ typedef struct Token {
 Token* token_list_make(TokenError* err);
 TokenError token_list_append(Token* list, Token* token);
 
+bool tkncmp(Token* t1, Token* t2);
 void token_to_string(Token* t, char* buffer);
-
 Token* parse(const char* input, uint64_t* idx, TokenError* err);
+
+#define TKN_PANIC(err)            \
+  do {                            \
+    if (err != TOKEN_ERROR_NIL) { \
+      exit(EXIT_FAILURE);         \
+    }                             \
+  } while (0)
 
 #endif  // TOKEN_H

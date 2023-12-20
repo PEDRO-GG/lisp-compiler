@@ -360,3 +360,37 @@ Token* parse(const char* input, uint64_t* idx, TokenError* err) {
   }
   return parse_value(input, idx, err);
 }
+
+bool tkncmp(Token* t1, Token* t2) {
+  if (t1->type != t2->type) {
+    return false;
+  }
+
+  switch (t1->type) {
+    case TOKEN_NUM: {
+      return t1->value.num == t2->value.num;
+    }
+    case TOKEN_IDENTIFIER: {
+      return strncmp((char*)t1->value.identifier.start,
+                     (char*)t2->value.identifier.start,
+                     (size_t)t1->value.identifier.length) == 0;
+    }
+    case TOKEN_STRING: {
+      return strncmp((char*)t1->value.string.start,
+                     (char*)t2->value.string.start,
+                     (size_t)t1->value.string.length) == 0;
+    }
+    case TOKEN_LIST: {
+      for (uint64_t i = 0; i < LENGTH(t1); i++) {
+        Token* child1 = DATA(t1)[i];
+        Token* child2 = DATA(t2)[i];
+        if (!tkncmp(child1, child2)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    default:
+      return true;
+  }
+}
