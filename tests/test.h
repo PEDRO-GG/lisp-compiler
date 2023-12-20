@@ -1,5 +1,6 @@
 #ifndef TEST_H
 #define TEST_H
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -27,17 +28,12 @@ void run_tests(const char* file_name);
     run_tests(__FILE__); \
   } while (0)
 
-typedef struct {
-  const char* expr;
-} FailedTest;
+void test_assert(bool expr, const char* raw_expr, const char* file_name,
+                 int line_num);
 
-#define TEST_ASSERT(expr)                                          \
-  do {                                                             \
-    if (!(expr)) {                                                 \
-      fprintf(stderr, "Assertion failed: %s\n", #expr);            \
-      fprintf(stderr, "File: %s, Line: %d\n", __FILE__, __LINE__); \
-      exit(EXIT_FAILURE);                                          \
-    }                                                              \
+#define TEST_ASSERT(expr)                         \
+  do {                                            \
+    test_assert(expr, #expr, __FILE__, __LINE__); \
   } while (0)
 
 #endif  // TEST_H

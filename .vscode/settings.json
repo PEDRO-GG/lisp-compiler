@@ -52,6 +52,9 @@
         "vector": "c",
         "stdbool.h": "c",
         "cstdio": "c",
-        "cctype": "c"
+        "cctype": "c",
+        "test.h": "c",
+        "sstream": "c",
+        "strings.h": "c"
     }
 }
