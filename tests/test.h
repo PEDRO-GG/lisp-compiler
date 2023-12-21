@@ -28,12 +28,20 @@ void run_tests(const char* file_name);
     run_tests(__FILE__); \
   } while (0)
 
-void test_assert(bool expr, const char* raw_expr, const char* file_name,
-                 int line_num);
+void test_eq(const char* raw_left, const char* raw_right, int left, int right,
+             const char* file_name, int line_num);
 
-#define TEST_ASSERT(expr)                         \
-  do {                                            \
-    test_assert(expr, #expr, __FILE__, __LINE__); \
+#define TEST_EQ(left, right)                                 \
+  do {                                                       \
+    test_eq(#left, #right, left, right, __FILE__, __LINE__); \
+  } while (0)
+
+void test_strcmp(const char* raw_left, const char* raw_right, const char* left,
+                 const char* right, const char* file_name, int line_num);
+
+#define TEST_STRCMP(left, right)                                 \
+  do {                                                           \
+    test_strcmp(#left, #right, left, right, __FILE__, __LINE__); \
   } while (0)
 
 #endif  // TEST_H

@@ -4,10 +4,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
 #define ADDEND 10
 #define MAX_MSGS 30
-#define MAX_MSG_LENGTH 100
+#define MAX_MSG_LENGTH 200
 
 static uint64_t length = 0;
 static uint64_t capacity = 0;
@@ -80,16 +81,28 @@ void run_tests(const char* file_name) {
       printf("FAIL\n");
       print_fail_msgs();
       reset_fail_msgs();
+      printf("\n");
     } else {
       printf("OK\n");
     }
   }
 }
 
-void test_assert(bool expr, const char* raw_expr, const char* file_name,
-                 int line_num) {
-  if (!expr) {
-    populate_fail_msg("%s:%d: assertion failed: %s", file_name, line_num,
-                      raw_expr);
+void test_eq(const char* raw_left, const char* raw_right, int left, int right,
+             const char* file_name, int line_num) {
+  if (left != right) {
+    populate_fail_msg(
+        "%s:%d: assertion failed: %s != %s\n      left: %d\n      right: %d",
+        file_name, line_num, raw_left, raw_right, left, right);
+  }
+}
+
+void test_strcmp(const char* raw_left, const char* raw_right, const char* left,
+                 const char* right, const char* file_name, int line_num) {
+  if (strcmp(left, right) != 0) {
+    populate_fail_msg(
+        "%s:%d: assertion failed: %s != %s\n      left: \"%s\"\n      right: "
+        "\"%s\"",
+        file_name, line_num, raw_left, raw_right, left, right);
   }
 }

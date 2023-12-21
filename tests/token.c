@@ -22,7 +22,7 @@ void test_parse(void) {
       {
           .input = "  (  123  )  ",
           .expected_token = *list1,
-          .expected_str = "  (  1234  )  ",
+          .expected_str = "(123)",
       },
       {
           .input = " 123  ",
@@ -40,21 +40,16 @@ void test_parse(void) {
     uint64_t idx = 0;
     ParseTest tst = tests[i];
     Token* tkn = parse(tst.input, &idx, &err);
-
-    TEST_ASSERT(err == TOKEN_ERROR_NIL);
-    TEST_ASSERT(tkncmp(tkn, &tst.expected_token));
-
-    char buffer[100];
+    char buffer[100] = {0};
     token_to_string(tkn, buffer);
+
+    TEST_EQ(err, TOKEN_ERROR_NIL);
+    TEST_EQ(tkncmp(tkn, &tst.expected_token), true);
+    TEST_STRCMP(buffer, tst.expected_str);
   }
 }
 
 int main(void) {
-  ADD_TEST(test_parse);
-  ADD_TEST(test_parse);
-  ADD_TEST(test_parse);
-  ADD_TEST(test_parse);
-  ADD_TEST(test_parse);
   ADD_TEST(test_parse);
   RUN_TESTS();
   return 0;
