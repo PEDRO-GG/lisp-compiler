@@ -182,6 +182,29 @@ void handle_test_command(int argc, char *argv[]) {
   }
 }
 
+void handle_build(void) {
+  // Open the source code directory
+  DIR *dir = opendir(CODE_DIR);
+  if (dir == NULL) {
+    perror("opendir failed");
+    exit(EXIT_FAILURE);
+  }
+
+  // Read and compile source code to objs
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (ends_with(entry->d_name, ".c")) {
+      compile(entry->d_name);
+    }
+  }
+
+  // Link all the objs to create an executable
+  build_exe();
+
+  // Close the directory
+  closedir(dir);
+}
+
 void print_usage(const char *program_name) {
   printf("Usage: %s <command> [options]\n", program_name);
   printf("\nCommands and options:\n");
@@ -209,28 +232,9 @@ int main(int argc, char **argv) {
       return 1;
     }
     return 1;
+  } else {
+    handle_build();
   }
-
-  // Open the source code directory
-  DIR *dir = opendir(CODE_DIR);
-  if (dir == NULL) {
-    perror("opendir failed");
-    return 1;
-  }
-
-  // Read and compile source code to objs
-  struct dirent *entry;
-  while ((entry = readdir(dir)) != NULL) {
-    if (ends_with(entry->d_name, ".c")) {
-      compile(entry->d_name);
-    }
-  }
-
-  // Link all the objs to create an executable
-  build_exe();
-
-  // Close the directory
-  closedir(dir);
 
   return 0;
 }
