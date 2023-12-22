@@ -10,6 +10,7 @@
 #define CC "gcc"
 
 #define CODE_DIR "./src/"
+#define TEST_DIR "./tests/"
 #define OBJ_DIR "./obj/"
 
 #define CFLAGS                                                      \
@@ -156,7 +157,60 @@ void build_exe(void) {
   }
 }
 
-int main(void) {
+void run_all_tests(void) {
+  printf("Running all tests...\n");
+  // Logic to run all tests
+}
+
+void run_specific_test(const char *file) {
+  printf("Running test in file: %s\n", file);
+  // Logic to run a specific test
+}
+
+void handle_test_command(int argc, char *argv[]) {
+  for (int i = 2; i < argc; ++i) {
+    if (strcmp(argv[i], "-A") == 0 || strcmp(argv[i], "--all") == 0) {
+      run_all_tests();
+    } else if (strncmp(argv[i], "-f=", 3) == 0 ||
+               strncmp(argv[i], "--file=", 7) == 0) {
+      char *test_file = strchr(argv[i], '=') + 1;
+      run_specific_test(test_file);
+    } else {
+      fprintf(stderr, "Unknown option: %s\n", argv[i]);
+      return;
+    }
+  }
+}
+
+void print_usage(const char *program_name) {
+  printf("Usage: %s <command> [options]\n", program_name);
+  printf("\nCommands and options:\n");
+  printf("  test -A, --all          Run all tests\n");
+  printf("  test -f, --file=file    Run a specific test\n");
+  printf("  -h, --help              Display this help and exit\n");
+}
+
+int main(int argc, char **argv) {
+  // Check if the `test` subcommand was passed in
+  if (argc >= 2) {
+    if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
+      print_usage(argv[0]);
+      return 0;
+    } else if (strcmp(argv[1], "test") == 0) {
+      if (argc <= 2) {
+        fprintf(stderr, "No test option specified\n");
+        print_usage(argv[0]);
+        return 1;
+      }
+      handle_test_command(argc, argv);
+    } else {
+      fprintf(stderr, "Unknown command: %s\n", argv[1]);
+      print_usage(argv[0]);
+      return 1;
+    }
+    return 1;
+  }
+
   // Open the source code directory
   DIR *dir = opendir(CODE_DIR);
   if (dir == NULL) {
