@@ -10,11 +10,11 @@
 #define CC "gcc"
 
 #define SRC_DIR_NAME "src"
-#define TEST_DIR_NAME "tests"
+#define TESTS_DIR_NAME "tests"
 #define OBJ_DIR_NAME "obj"
 
 #define SRC_DIR "./" SRC_DIR_NAME "/"
-#define TEST_DIR "./" TEST_DIR_NAME "/"
+#define TESTS_DIR "./" TESTS_DIR_NAME "/"
 #define OBJ_DIR "./" OBJ_DIR_NAME "/"
 
 #define CFLAGS                                                      \
@@ -129,23 +129,27 @@ void build_exe(void) {
 }
 
 void run_all_tests(void) {
-  printf("Running all tests...\n");
-
-  // Open the test directory
-  DIR *dir = opendir(TEST_DIR);
+  // Open the ./tests/ directory
+  DIR *dir = opendir(TESTS_DIR);
   if (dir == NULL) {
     perror("opendir failed");
     exit(EXIT_FAILURE);
   }
 
-  // Run each test
+  // Compile each test
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
-    // if (ends_with(entry->d_name, "test.c")) {
-    //   compile(entry->d_name, TEST_DIR, ".o");
-    // } else if (ends_with(entry->d_name, ".c")) {
-    //   compile(entry->d_name, TEST_DIR, "_test.o");
-    // }
+    char in_file[100];
+    strcpy(in_file, TESTS_DIR);
+    strcat(in_file, entry->d_name);
+
+    char out_file[100];
+    strcpy(out_file, OBJ_DIR TESTS_DIR_NAME "/");
+    strncat(out_file, entry->d_name, calc_name_idx(entry->d_name));
+    strcat(out_file, ".o");
+
+    // printf("%s  %s\n", in_file, out_file);
+    compile(in_file, out_file);
   }
 }
 
