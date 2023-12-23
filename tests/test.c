@@ -51,7 +51,7 @@ void populate_fail_msg(const char* format, ...) {
   va_end(args);
 }
 
-void print_fail_msgs() {
+void print_fail_msgs(void) {
   for (int i = 0; i < MAX_MSGS; ++i) {
     if (fail_msgs[i][0] != '\0') {
       printf("    %s\n", fail_msgs[i]);
@@ -59,7 +59,7 @@ void print_fail_msgs() {
   }
 }
 
-void reset_fail_msgs() { idx = 0; }
+void reset_fail_msgs(void) { idx = 0; }
 
 void run_tests(const char* file_name) {
   assert(tests != NULL);
