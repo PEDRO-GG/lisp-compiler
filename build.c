@@ -9,21 +9,27 @@
 
 #define CC "gcc"
 
-#define CODE_DIR "./src/"
-#define TEST_DIR "./tests/"
-#define OBJ_DIR "./obj/"
+#define SRC_DIR_NAME "src"
+#define TEST_DIR_NAME "tests"
+#define OBJ_DIR_NAME "obj"
+
+#define SRC_DIR "./" SRC_DIR_NAME "/"
+#define TEST_DIR "./" TEST_DIR_NAME "/"
+#define OBJ_DIR "./" OBJ_DIR_NAME "/"
 
 #define CFLAGS                                                      \
   "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-Wunused-variable", \
       "-std=c99", "-O0", "-c", "-g"
 
-bool ends_with(const char *name, const char *postfix) {
-  // Traverse the string until a period is found
-  while (*name != '\0' && *name != '.') {
-    name++;
+bool ends_with(const char *str1, const char *str2) {
+  while (*str1 != '\0') {
+    if (*str1 == str2[0] && strcmp(str1, str2) == 0) {
+      return true;
+    }
+    str1++;
   }
 
-  return strcmp(name, postfix) == 0;
+  return false;
 }
 
 void print_cmd(char *const *cmd) {
@@ -37,57 +43,18 @@ void print_cmd(char *const *cmd) {
   printf("\n");
 }
 
-void no_ext(const char *name, char *buffer, uint32_t start) {
-  assert(name != NULL);
-  assert(buffer != NULL);
-  assert(start >= 0);
-
-  // Copy everything to the buffer except for the extension
-  while (name[start] != '\0' && name[start] != '.') {
-    buffer[start] = name[start];
-    start++;
-  }
-  buffer[start] = '\0';
-}
-
-// Assumes buffer is big enough to contain name and prefix
-void prepend(char *buffer, const char *prefix, const char *name) {
-  assert(buffer != NULL);
-  assert(prefix != NULL);
-  assert(name != NULL);
-
-  // Append prefix
-  uint32_t i = 0;
-  while (prefix[i] != '\0') {
-    buffer[i] = prefix[i];
+int calc_name_idx(const char *str) {
+  assert(str != NULL);
+  int i = 0;
+  while (str[i] != '.' && str[i] != '\0') {
     i++;
   }
-
-  // Append name
-  uint32_t j = 0;
-  while (name[j] != '\0') {
-    buffer[i + j] = name[j];
-    j++;
-  }
-
-  buffer[i + j] = '\0';
+  return i;
 }
 
-void compile(char *name) {
-  // Get the name without the extension
-  char no_ext_buffer[100];
-  no_ext(name, no_ext_buffer, 0);
-
-  // Prepend obj/
-  char outfile[100];
-  prepend(outfile, OBJ_DIR, no_ext_buffer);
-
-  // Append .o
-  strcat(outfile, ".o");
-
-  // Prepend src/
-  char srcfile[100];
-  prepend(srcfile, CODE_DIR, name);
+void compile(char *in_file, char *out_file) {
+  assert(in_file != NULL);
+  assert(out_file != NULL);
 
   // Run the command in a child process
   pid_t pid = fork();
@@ -97,7 +64,7 @@ void compile(char *name) {
     exit(EXIT_FAILURE);
   } else if (pid == 0) {
     // Child process
-    char *const cmd[] = {CC, CFLAGS, srcfile, "-o", outfile, NULL};
+    char *const cmd[] = {CC, CFLAGS, in_file, "-o", out_file, NULL};
     print_cmd(cmd);
     execvp(CC, cmd);
 
@@ -127,8 +94,8 @@ void build_exe(void) {
   }
   cmd[0] = CC;
 
-  // Open the obj directory
-  DIR *dir = opendir(OBJ_DIR);
+  // Open the ./obj/src/ directory
+  DIR *dir = opendir(OBJ_DIR SRC_DIR_NAME "/");
   if (dir == NULL) {
     perror("opendir failed");
   }
@@ -138,11 +105,15 @@ void build_exe(void) {
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
     if (ends_with(entry->d_name, ".o")) {
-      // Prepend obj/
-      char *outfile = malloc(100 * sizeof(char));
-      prepend(outfile, OBJ_DIR, entry->d_name);
+      // Construct path ./obj/src/<d_name>.o
+      char *out_file = malloc(
+          100 * sizeof(char));  // malloc b/c we need it to live past this loop
+      strcpy(out_file, OBJ_DIR SRC_DIR_NAME "/");
+      strcat(out_file, entry->d_name);
+      // printf("%s\n", out_file);
+
       // Append to command
-      cmd[i] = outfile;
+      cmd[i] = out_file;
       i++;
     }
   }
@@ -159,7 +130,23 @@ void build_exe(void) {
 
 void run_all_tests(void) {
   printf("Running all tests...\n");
-  // Logic to run all tests
+
+  // Open the test directory
+  DIR *dir = opendir(TEST_DIR);
+  if (dir == NULL) {
+    perror("opendir failed");
+    exit(EXIT_FAILURE);
+  }
+
+  // Run each test
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    // if (ends_with(entry->d_name, "test.c")) {
+    //   compile(entry->d_name, TEST_DIR, ".o");
+    // } else if (ends_with(entry->d_name, ".c")) {
+    //   compile(entry->d_name, TEST_DIR, "_test.o");
+    // }
+  }
 }
 
 void run_specific_test(const char *file) {
@@ -184,7 +171,7 @@ void handle_test_command(int argc, char *argv[]) {
 
 void handle_build(void) {
   // Open the source code directory
-  DIR *dir = opendir(CODE_DIR);
+  DIR *dir = opendir(SRC_DIR);
   if (dir == NULL) {
     perror("opendir failed");
     exit(EXIT_FAILURE);
@@ -194,7 +181,17 @@ void handle_build(void) {
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
     if (ends_with(entry->d_name, ".c")) {
-      compile(entry->d_name);
+      char in_file[100];
+      strcpy(in_file, SRC_DIR);
+      strcat(in_file, entry->d_name);
+
+      char out_file[100];
+      strcpy(out_file, OBJ_DIR SRC_DIR_NAME "/");
+      strncat(out_file, entry->d_name, calc_name_idx(entry->d_name));
+      strcat(out_file, ".o");
+
+      // printf("%s  %s\n", in_file, out_file);
+      compile(in_file, out_file);
     }
   }
 
