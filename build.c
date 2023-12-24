@@ -12,10 +12,12 @@
 #define SRC_DIR_NAME "src"
 #define TESTS_DIR_NAME "tests"
 #define OBJ_DIR_NAME "obj"
+#define BIN_DIR_NAME "bin"
 
 #define SRC_DIR "./" SRC_DIR_NAME "/"
 #define TESTS_DIR "./" TESTS_DIR_NAME "/"
 #define OBJ_DIR "./" OBJ_DIR_NAME "/"
+#define BIN_DIR "./" BIN_DIR_NAME "/"
 
 #define CFLAGS                                                      \
   "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-Wunused-variable", \
@@ -139,17 +141,30 @@ void run_all_tests(void) {
   // Compile each test
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
-    char in_file[100];
-    strcpy(in_file, TESTS_DIR);
-    strcat(in_file, entry->d_name);
+    if (ends_with(entry->d_name, ".c") &&
+        strcmp(entry->d_name, "test.c") != 0) {
+      char in_file[100];
+      strcpy(in_file, TESTS_DIR);
+      strcat(in_file, entry->d_name);
 
-    char out_file[100];
-    strcpy(out_file, OBJ_DIR TESTS_DIR_NAME "/");
-    strncat(out_file, entry->d_name, calc_name_idx(entry->d_name));
-    strcat(out_file, ".o");
+      char out_file[100];
+      strcpy(out_file, OBJ_DIR TESTS_DIR_NAME "/");
+      strncat(out_file, entry->d_name, calc_name_idx(entry->d_name));
+      strcat(out_file, ".o");
 
-    // printf("%s  %s\n", in_file, out_file);
-    compile(in_file, out_file);
+      // printf("%s  %s\n", in_file, out_file);
+      compile(in_file, out_file);
+
+      // Each test is an executable
+      // Setup the command
+      char *cmd[] = {
+          CC, out_file, "-o", "./bin/main", NULL,
+      };
+      print_cmd(cmd);
+      // if (execvp(CC, cmd) == -1) {
+      //   perror("failed to link");
+      // }
+    }
   }
 }
 
