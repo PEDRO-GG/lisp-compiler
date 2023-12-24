@@ -19,6 +19,8 @@
 #define OBJ_DIR "./" OBJ_DIR_NAME "/"
 #define BIN_DIR "./" BIN_DIR_NAME "/"
 
+#define OBJ_SRC_DIR OBJ_DIR SRC_DIR_NAME "/"
+
 #define CFLAGS                                                      \
   "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-Wunused-variable", \
       "-std=c99", "-O0", "-c", "-g"
@@ -97,7 +99,7 @@ void build_exe(void) {
   cmd[0] = CC;
 
   // Open the ./obj/src/ directory
-  DIR *dir = opendir(OBJ_DIR SRC_DIR_NAME "/");
+  DIR *dir = opendir(OBJ_SRC_DIR);
   if (dir == NULL) {
     perror("opendir failed");
   }
@@ -110,7 +112,7 @@ void build_exe(void) {
       // Construct path ./obj/src/<d_name>.o
       char *out_file = malloc(
           100 * sizeof(char));  // malloc b/c we need it to live past this loop
-      strcpy(out_file, OBJ_DIR SRC_DIR_NAME "/");
+      strcpy(out_file, OBJ_SRC_DIR);
       strcat(out_file, entry->d_name);
       // printf("%s\n", out_file);
 
@@ -205,7 +207,7 @@ void handle_build(void) {
       strcat(in_file, entry->d_name);
 
       char out_file[100];
-      strcpy(out_file, OBJ_DIR SRC_DIR_NAME "/");
+      strcpy(out_file, OBJ_SRC_DIR);
       strncat(out_file, entry->d_name, calc_name_length(entry->d_name));
       strcat(out_file, ".o");
 
