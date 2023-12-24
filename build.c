@@ -45,7 +45,7 @@ void print_cmd(char *const *cmd) {
   printf("\n");
 }
 
-int calc_name_idx(const char *str) {
+int calc_name_length(const char *str) {
   assert(str != NULL);
   int i = 0;
   while (str[i] != '.' && str[i] != '\0') {
@@ -149,7 +149,7 @@ void run_all_tests(void) {
 
       char out_file[100];
       strcpy(out_file, OBJ_DIR TESTS_DIR_NAME "/");
-      strncat(out_file, entry->d_name, calc_name_idx(entry->d_name));
+      strncat(out_file, entry->d_name, calc_name_length(entry->d_name));
       strcat(out_file, ".o");
 
       // printf("%s  %s\n", in_file, out_file);
@@ -206,7 +206,7 @@ void handle_build(void) {
 
       char out_file[100];
       strcpy(out_file, OBJ_DIR SRC_DIR_NAME "/");
-      strncat(out_file, entry->d_name, calc_name_idx(entry->d_name));
+      strncat(out_file, entry->d_name, calc_name_length(entry->d_name));
       strcat(out_file, ".o");
 
       // printf("%s  %s\n", in_file, out_file);
