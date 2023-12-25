@@ -20,6 +20,10 @@
 #define BIN_DIR "./" BIN_DIR_NAME "/"
 
 #define OBJ_SRC_DIR OBJ_DIR SRC_DIR_NAME "/"
+#define OBJ_TESTS_DIR OBJ_DIR TESTS_DIR_NAME "/"
+
+#define BIN_SRC_DIR BIN_DIR SRC_DIR_NAME "/"
+#define BIN_TESTS_DIR BIN_DIR TESTS_DIR_NAME "/"
 
 #define CFLAGS                                                      \
   "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-Wunused-variable", \
@@ -90,7 +94,7 @@ void compile(char *in_file, char *out_file) {
   }
 }
 
-void build_exe(void) {
+void build_exe(char *obj_dir) {
   // Setup the command
   char **cmd = malloc(20 * sizeof(char *));
   if (cmd == NULL) {
@@ -98,8 +102,8 @@ void build_exe(void) {
   }
   cmd[0] = CC;
 
-  // Open the ./obj/src/ directory
-  DIR *dir = opendir(OBJ_SRC_DIR);
+  // Open the directory containing the objs
+  DIR *dir = opendir(obj_dir);
   if (dir == NULL) {
     perror("opendir failed");
   }
@@ -109,10 +113,10 @@ void build_exe(void) {
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
     if (ends_with(entry->d_name, ".o")) {
-      // Construct path ./obj/src/<d_name>.o
+      // Construct path ./obj/src/<d_name>.o or ./obj/tests/<d_name>.o
       char *out_file = malloc(
           100 * sizeof(char));  // malloc b/c we need it to live past this loop
-      strcpy(out_file, OBJ_SRC_DIR);
+      strcpy(out_file, obj_dir);
       strcat(out_file, entry->d_name);
       // printf("%s\n", out_file);
 
@@ -124,7 +128,7 @@ void build_exe(void) {
 
   // Append the remaining flags
   cmd[i++] = "-o";
-  cmd[i++] = "./bin/main";
+  cmd[i++] = BIN_SRC_DIR "main";
   cmd[i++] = NULL;
   print_cmd(cmd);
   if (execvp(CC, cmd) == -1) {
@@ -140,6 +144,9 @@ void run_all_tests(void) {
     exit(EXIT_FAILURE);
   }
 
+  // Every test depends on tests/test.c
+  compile(TESTS_DIR "test.c", OBJ_TESTS_DIR "test.o");
+
   // Compile each test
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
@@ -150,22 +157,25 @@ void run_all_tests(void) {
       strcat(in_file, entry->d_name);
 
       char out_file[100];
-      strcpy(out_file, OBJ_DIR TESTS_DIR_NAME "/");
+      strcpy(out_file, OBJ_TESTS_DIR);
       strncat(out_file, entry->d_name, calc_name_length(entry->d_name));
       strcat(out_file, ".o");
+
+      char bin_file[100];
+      strcpy(bin_file, BIN_TESTS_DIR);
+      strncat(bin_file, entry->d_name, calc_name_length(entry->d_name));
 
       // printf("%s  %s\n", in_file, out_file);
       compile(in_file, out_file);
 
-      // Each test is an executable
-      // Setup the command
+      // Setup the command; Each test is an executable
       char *cmd[] = {
-          CC, out_file, "-o", "./bin/main", NULL,
+          CC, out_file, OBJ_TESTS_DIR "test.o", "-o", bin_file, NULL,
       };
       print_cmd(cmd);
-      // if (execvp(CC, cmd) == -1) {
-      //   perror("failed to link");
-      // }
+      if (execvp(CC, cmd) == -1) {
+        perror("failed to link");
+      }
     }
   }
 }
@@ -217,7 +227,7 @@ void handle_build(void) {
   }
 
   // Link all the objs to create an executable
-  build_exe();
+  build_exe(OBJ_SRC_DIR);
 
   // Close the directory
   closedir(dir);
@@ -244,6 +254,7 @@ int main(int argc, char **argv) {
         return 1;
       }
       handle_test_command(argc, argv);
+      return 0;
     } else {
       fprintf(stderr, "Unknown command: %s\n", argv[1]);
       print_usage(argv[0]);

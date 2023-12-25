@@ -10,7 +10,7 @@
             "name": "Debug",
             "program": "${workspaceFolder}/bin/build",
             // "program": "${workspaceFolder}/bin/main",
-            // "args": ["test"],
+            "args": ["test", "-A"],
             "cwd": "${workspaceFolder}"
         }
     ]
