@@ -236,6 +236,7 @@ Token* parse_num(const char* input, uint64_t* idx, TokenError* err) {
 
   tkn->type = TOKEN_NUM;
   tkn->value.num = num;
+  *err = TOKEN_ERROR_NIL;
 
   return tkn;
 }
@@ -348,9 +349,8 @@ Token* parse(const char* input, uint64_t* idx, TokenError* err) {
       }
 
       token_list_append(parent_list, child_list);
-
-      return parent_list;
     }
+    return parent_list;
   } else if (input[*idx] == ')') {
     *err = TOKEN_ERROR_EXPECTED_LPAREN;
     return NULL;
@@ -361,7 +361,7 @@ Token* parse(const char* input, uint64_t* idx, TokenError* err) {
   return parse_value(input, idx, err);
 }
 
-bool tkncmp(Token* t1, Token* t2) {
+bool tkncmp(const Token* t1, const Token* t2) {
   if (t1->type != t2->type) {
     return false;
   }

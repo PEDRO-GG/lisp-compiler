@@ -8,9 +8,10 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/bin/build",
             // "program": "${workspaceFolder}/bin/main",
-            "args": ["test", "-A"],
+            // "program": "${workspaceFolder}/bin/build",
+            "program": "${workspaceFolder}/bin/tests/token",
+            // "args": ["test", "-A"],
             "cwd": "${workspaceFolder}"
         }
     ]
