@@ -242,12 +242,11 @@ Token* parse_num(const char* input, uint64_t* idx, TokenError* err) {
 }
 
 Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
-  uint64_t n = 0;
-  const char* start = input;
-  while (isalpha(input[*idx]) || input[*idx] == '+' || input[*idx] == '-' ||
-         input[*idx] == '*' || input[*idx] == '/' || input[*idx] == '?') {
+  uint64_t length = 0;
+  const char* start = input + *idx;
+  while (isalpha(input[*idx]) || is_op(input[*idx])) {
     (*idx)++;
-    n++;
+    length++;
   }
 
   Token* tkn = malloc(sizeof(Token));
@@ -256,53 +255,53 @@ Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
     return NULL;
   }
 
-  if (strncmp(input, "call", n) == 0) {
+  if (strncmp(start, "call", length) == 0) {
     tkn->type = TOKEN_CALL;
-  } else if (strncmp(input, "print", n) == 0) {
+  } else if (strncmp(start, "print", length) == 0) {
     tkn->type = TOKEN_PRINT;
-  } else if (strncmp(input, "do", n) == 0) {
+  } else if (strncmp(start, "do", length) == 0) {
     tkn->type = TOKEN_DO;
-  } else if (strncmp(input, "def", n) == 0) {
+  } else if (strncmp(start, "def", length) == 0) {
     tkn->type = TOKEN_DEF;
-  } else if (strncmp(input, "then", n) == 0) {
+  } else if (strncmp(start, "then", length) == 0) {
     tkn->type = TOKEN_THEN;
-  } else if (strncmp(input, "else", n) == 0) {
+  } else if (strncmp(start, "else", length) == 0) {
     tkn->type = TOKEN_ELSE;
-  } else if (strncmp(input, "loop", n) == 0) {
+  } else if (strncmp(start, "loop", length) == 0) {
     tkn->type = TOKEN_LOOP;
-  } else if (strncmp(input, "break", n) == 0) {
+  } else if (strncmp(start, "break", length) == 0) {
     tkn->type = TOKEN_BREAK;
-  } else if (strncmp(input, "return", n) == 0) {
+  } else if (strncmp(start, "return", length) == 0) {
     tkn->type = TOKEN_RETURN;
-  } else if (strncmp(input, "var", n) == 0) {
+  } else if (strncmp(start, "var", length) == 0) {
     tkn->type = TOKEN_VAR;
-  } else if (strncmp(input, "set", n) == 0) {
+  } else if (strncmp(start, "set", length) == 0) {
     tkn->type = TOKEN_SET;
-  } else if (strncmp(input, "if", n) == 0) {
+  } else if (strncmp(start, "if", length) == 0) {
     tkn->type = TOKEN_IF;
-  } else if (strncmp(input, "true", n) == 0) {
+  } else if (strncmp(start, "true", length) == 0) {
     tkn->type = TOKEN_TRUE;
-  } else if (strncmp(input, "false", n) == 0) {
+  } else if (strncmp(start, "false", length) == 0) {
     tkn->type = TOKEN_FALSE;
-  } else if (strncmp(input, "?", n) == 0) {
+  } else if (strncmp(start, "?", length) == 0) {
     tkn->type = TOKEN_TERNARY;
-  } else if (strncmp(input, "gt", n) == 0) {
+  } else if (strncmp(start, "gt", length) == 0) {
     tkn->type = TOKEN_GT;
-  } else if (strncmp(input, "le", n) == 0) {
+  } else if (strncmp(start, "le", length) == 0) {
     tkn->type = TOKEN_LE;
-  } else if (strncmp(input, "lt", n) == 0) {
+  } else if (strncmp(start, "lt", length) == 0) {
     tkn->type = TOKEN_LT;
-  } else if (strncmp(input, "+", n) == 0) {
+  } else if (strncmp(start, "+", length) == 0) {
     tkn->type = TOKEN_ADD;
-  } else if (strncmp(input, "-", n) == 0) {
+  } else if (strncmp(start, "-", length) == 0) {
     tkn->type = TOKEN_MINUS;
-  } else if (strncmp(input, "*", n) == 0) {
+  } else if (strncmp(start, "*", length) == 0) {
     tkn->type = TOKEN_MULT;
   } else {
     tkn->type = TOKEN_IDENTIFIER;
     tkn->value.identifier = (FatStr){
-        .start = (const uint8_t*)start,
-        .length = n,
+        .start = (const uint8_t*)input,
+        .length = length,
     };
   }
 
@@ -343,12 +342,12 @@ Token* parse(const char* input, uint64_t* idx, TokenError* err) {
         break;
       }
 
-      Token* child_list = parse(input, idx, err);
+      Token* child = parse(input, idx, err);
       if (*err != TOKEN_ERROR_NIL) {
         return NULL;
       }
 
-      token_list_append(parent_list, child_list);
+      token_list_append(parent_list, child);
     }
     return parent_list;
   } else if (input[*idx] == ')') {
@@ -393,4 +392,8 @@ bool tkncmp(const Token* t1, const Token* t2) {
     default:
       return true;
   }
+}
+
+bool is_op(char c) {
+  return c == '+' || c == '-' || c == '*' || c == '/' || c == '?';
 }
