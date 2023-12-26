@@ -64,29 +64,51 @@ void test_parse_list_with_two_elements(void) {
 
 void test_parse_arithmetic(void) {
   TokenError err;
-  Token* list;
+  Token* list1;
+  Token* list2;
 
-  list = token_list_make(&err);
+  list1 = token_list_make(&err);
   TKN_PANIC(err);
 
-  err = token_list_append(list, &(Token){
-                                    .type = TOKEN_ADD,
-                                });
+  err = token_list_append(list1, &(Token){
+                                     .type = TOKEN_ADD,
+                                 });
   TKN_PANIC(err);
 
-  err = token_list_append(list, &(Token){
-                                    .type = TOKEN_NUM,
-                                    .value.num = 1,
-                                });
+  err = token_list_append(list1, &(Token){
+                                     .type = TOKEN_NUM,
+                                     .value.num = 1,
+                                 });
   TKN_PANIC(err);
 
-  err = token_list_append(list, &(Token){
-                                    .type = TOKEN_NUM,
-                                    .value.num = 2,
-                                });
+  err = token_list_append(list1, &(Token){
+                                     .type = TOKEN_NUM,
+                                     .value.num = 2,
+                                 });
   TKN_PANIC(err);
 
-  run_parse_test(" (   + 1 2   ) ", list, "(+ 1 2)");
+  list2 = token_list_make(&err);
+  TKN_PANIC(err);
+
+  err = token_list_append(list2, &(Token){
+                                     .type = TOKEN_MINUS,
+                                 });
+  TKN_PANIC(err);
+
+  err = token_list_append(list2, &(Token){
+                                     .type = TOKEN_NUM,
+                                     .value.num = 1,
+                                 });
+  TKN_PANIC(err);
+
+  err = token_list_append(list2, &(Token){
+                                     .type = TOKEN_NUM,
+                                     .value.num = 2,
+                                 });
+  TKN_PANIC(err);
+
+  run_parse_test(" (   + 1 2   ) ", list1, "(+ 1 2)");
+  run_parse_test(" (  - 1 2   ) ", list2, "(- 1 2)");
 }
 
 int main(void) {
