@@ -134,12 +134,74 @@ void test_parse_string(void) {
                  "\"yes  \"");
 }
 
+void test_parse_ternary(void) {
+  TokenError err;
+  Token* list2;
+
+  list2 = token_list_make(&err);
+  TKN_PANIC(err);
+
+  err = token_list_append(list2, &(Token){
+                                     .type = TOKEN_LT,
+                                 });
+  TKN_PANIC(err);
+
+  err = token_list_append(list2, &(Token){
+                                     .type = TOKEN_NUM,
+                                     .value.num = 1,
+                                 });
+  TKN_PANIC(err);
+
+  err = token_list_append(list2, &(Token){
+                                     .type = TOKEN_NUM,
+                                     .value.num = 2,
+                                 });
+  TKN_PANIC(err);
+
+  Token* list1;
+
+  list1 = token_list_make(&err);
+  TKN_PANIC(err);
+
+  err = token_list_append(list1, &(Token){
+                                     .type = TOKEN_TERNARY,
+                                 });
+  TKN_PANIC(err);
+
+  err = token_list_append(list1, list2);
+  TKN_PANIC(err);
+
+  err = token_list_append(list1, &(Token){
+                                     .type = TOKEN_STRING,
+                                     .value.string =
+                                         (FatStr){
+                                             .start = (const uint8_t*)"\"yes\"",
+                                             .length = 5,
+                                         },
+                                 });
+  TKN_PANIC(err);
+
+  err = token_list_append(list1, &(Token){
+                                     .type = TOKEN_STRING,
+                                     .value.string =
+                                         (FatStr){
+                                             .start = (const uint8_t*)"\"no\"",
+                                             .length = 4,
+                                         },
+                                 });
+  TKN_PANIC(err);
+
+  run_parse_test("(  ? (lt 1 2) \"yes\"   \"no\")", list1,
+                 "(? (lt 1 2) \"yes\" \"no\")");
+}
+
 int main(void) {
   ADD_TEST(test_parse_num);
   ADD_TEST(test_parse_list_with_one_element);
   ADD_TEST(test_parse_list_with_two_elements);
   ADD_TEST(test_parse_arithmetic);
   ADD_TEST(test_parse_string);
+  ADD_TEST(test_parse_ternary);
   RUN_TESTS();
   return 0;
 }
