@@ -150,8 +150,7 @@ void test_parse_ternary(void) {
   TKN_PANIC(err);
 
   APPEND_TOKEN_AND_CHECK(list1, ((Token){.type = TOKEN_TERNARY}));
-  APPEND_TOKEN_AND_CHECK(list1,
-                         (*list2));  // Make sure list2 points to a valid Token
+  APPEND_TOKEN_AND_CHECK(list1, (*list2));
   APPEND_TOKEN_AND_CHECK(list1, ((Token){
                                     .type = TOKEN_STRING,
                                     .value.string =
