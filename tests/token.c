@@ -111,11 +111,25 @@ void test_parse_arithmetic(void) {
   run_parse_test(" (  - 1 2   ) ", list2, "(- 1 2)");
 }
 
+void test_parse_string(void) {
+  run_parse_test("  \"yes\" ",
+                 &(Token){
+                     .type = TOKEN_STRING,
+                     .value.string =
+                         (FatStr){
+                             .start = (const uint8_t*)"\"yes\"",
+                             .length = 5,
+                         },
+                 },
+                 "\"yes\"");
+}
+
 int main(void) {
   ADD_TEST(test_parse_num);
   ADD_TEST(test_parse_list_with_one_element);
   ADD_TEST(test_parse_list_with_two_elements);
   ADD_TEST(test_parse_arithmetic);
+  ADD_TEST(test_parse_string);
   RUN_TESTS();
   return 0;
 }

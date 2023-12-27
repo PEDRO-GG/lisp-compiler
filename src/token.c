@@ -308,17 +308,46 @@ Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
   return tkn;
 }
 
+Token* parse_string(const char* input, uint64_t* idx, TokenError* err) {
+  const char* start = input + *idx;
+  uint64_t length = 1;
+  (*idx)++;
+  while (input[*idx] != '\"' && input[*idx] != '\0' && !isspace(input[*idx])) {
+    (*idx)++;
+    length++;
+  }
+  (*idx)++;
+  length++;
+
+  Token* tkn = malloc(sizeof(Token));
+  if (tkn == NULL) {
+    *err = TOKEN_ERROR_MALLOC;
+    return NULL;
+  }
+
+  tkn->type = TOKEN_STRING;
+  tkn->value.string = (FatStr){
+      .start = (const uint8_t*)start,
+      .length = length,
+  };
+
+  return tkn;
+}
+
 Token* parse_value(const char* input, uint64_t* idx, TokenError* err) {
   if (isdigit(input[*idx])) {
     return parse_num(input, idx, err);
+  } else if (input[*idx] == '\"') {
+    return parse_string(input, idx, err);
   }
-
   return parse_chars(input, idx, err);
 }
 
 Token* parse(const char* input, uint64_t* idx, TokenError* err) {
   assert(input != NULL);
   assert(err != NULL);
+
+  *err = TOKEN_ERROR_NIL;
 
   skip_space(input, idx);
 
@@ -357,6 +386,7 @@ Token* parse(const char* input, uint64_t* idx, TokenError* err) {
     *err = TOKEN_ERROR_EMPTY_PROGRAM;
     return NULL;
   }
+
   return parse_value(input, idx, err);
 }
 
