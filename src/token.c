@@ -312,7 +312,7 @@ Token* parse_string(const char* input, uint64_t* idx, TokenError* err) {
   const char* start = input + *idx;
   uint64_t length = 1;
   (*idx)++;
-  while (input[*idx] != '\"' && input[*idx] != '\0' && !isspace(input[*idx])) {
+  while (input[*idx] != '\"' && input[*idx] != '\0') {
     (*idx)++;
     length++;
   }

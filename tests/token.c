@@ -122,6 +122,16 @@ void test_parse_string(void) {
                          },
                  },
                  "\"yes\"");
+  run_parse_test("  \"yes  \" ",
+                 &(Token){
+                     .type = TOKEN_STRING,
+                     .value.string =
+                         (FatStr){
+                             .start = (const uint8_t*)"\"yes  \"",
+                             .length = 7,
+                         },
+                 },
+                 "\"yes  \"");
 }
 
 int main(void) {
