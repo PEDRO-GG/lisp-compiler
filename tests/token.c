@@ -136,60 +136,38 @@ void test_parse_string(void) {
 
 void test_parse_ternary(void) {
   TokenError err;
+  Token* list1;
   Token* list2;
 
   list2 = token_list_make(&err);
   TKN_PANIC(err);
 
-  err = token_list_append(list2, &(Token){
-                                     .type = TOKEN_LT,
-                                 });
-  TKN_PANIC(err);
-
-  err = token_list_append(list2, &(Token){
-                                     .type = TOKEN_NUM,
-                                     .value.num = 1,
-                                 });
-  TKN_PANIC(err);
-
-  err = token_list_append(list2, &(Token){
-                                     .type = TOKEN_NUM,
-                                     .value.num = 2,
-                                 });
-  TKN_PANIC(err);
-
-  Token* list1;
+  APPEND_TOKEN_AND_CHECK(list2, ((Token){.type = TOKEN_LT}));
+  APPEND_TOKEN_AND_CHECK(list2, ((Token){.type = TOKEN_NUM, .value.num = 1}));
+  APPEND_TOKEN_AND_CHECK(list2, ((Token){.type = TOKEN_NUM, .value.num = 2}));
 
   list1 = token_list_make(&err);
   TKN_PANIC(err);
 
-  err = token_list_append(list1, &(Token){
-                                     .type = TOKEN_TERNARY,
-                                 });
-  TKN_PANIC(err);
-
-  err = token_list_append(list1, list2);
-  TKN_PANIC(err);
-
-  err = token_list_append(list1, &(Token){
-                                     .type = TOKEN_STRING,
-                                     .value.string =
-                                         (FatStr){
-                                             .start = (const uint8_t*)"\"yes\"",
-                                             .length = 5,
-                                         },
-                                 });
-  TKN_PANIC(err);
-
-  err = token_list_append(list1, &(Token){
-                                     .type = TOKEN_STRING,
-                                     .value.string =
-                                         (FatStr){
-                                             .start = (const uint8_t*)"\"no\"",
-                                             .length = 4,
-                                         },
-                                 });
-  TKN_PANIC(err);
+  APPEND_TOKEN_AND_CHECK(list1, ((Token){.type = TOKEN_TERNARY}));
+  APPEND_TOKEN_AND_CHECK(list1,
+                         (*list2));  // Make sure list2 points to a valid Token
+  APPEND_TOKEN_AND_CHECK(list1, ((Token){
+                                    .type = TOKEN_STRING,
+                                    .value.string =
+                                        (FatStr){
+                                            .start = (const uint8_t*)"\"yes\"",
+                                            .length = 5,
+                                        },
+                                }));
+  APPEND_TOKEN_AND_CHECK(list1, ((Token){
+                                    .type = TOKEN_STRING,
+                                    .value.string =
+                                        (FatStr){
+                                            .start = (const uint8_t*)"\"no\"",
+                                            .length = 4,
+                                        },
+                                }));
 
   run_parse_test("(  ? (lt 1 2) \"yes\"   \"no\")", list1,
                  "(? (lt 1 2) \"yes\" \"no\")");

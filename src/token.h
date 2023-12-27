@@ -92,4 +92,10 @@ Token* parse(const char* input, uint64_t* idx, TokenError* err);
     }                             \
   } while (0)
 
+#define APPEND_TOKEN_AND_CHECK(list, token_expr)  \
+  do {                                            \
+    err = token_list_append(list, &(token_expr)); \
+    TKN_PANIC(err);                               \
+  } while (0)
+
 #endif  // TOKEN_H
