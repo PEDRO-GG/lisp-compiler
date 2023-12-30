@@ -38,12 +38,10 @@ void token_to_string(Token* t, char* buffer) {
     case TOKEN_IDENTIFIER: {
       strncat(buffer, (char*)t->value.identifier.start,
               t->value.identifier.length);
-      strcat(buffer, "\0");
       break;
     }
     case TOKEN_STRING: {
       strncat(buffer, (char*)t->value.string.start, t->value.string.length);
-      strcat(buffer, "\0");
       break;
     }
     case TOKEN_DO: {
@@ -190,7 +188,9 @@ Token* token_list_make(TokenError* err) {
       .capacity = capacity,
       .length = 0,
   };
+
   *err = TOKEN_ERROR_NIL;
+
   return tkn;
 }
 
@@ -212,6 +212,28 @@ TokenError token_list_append(Token* list, Token* token) {
   // Append the token
   list->value.list.data[LENGTH(list)++] = token;
   return TOKEN_ERROR_NIL;
+}
+
+Token* token_list_init(TokenError* err, int total, ...) {
+  Token* list = token_list_make(err);
+  if (*err != TOKEN_ERROR_NIL) {
+    return NULL;
+  }
+
+  va_list args;
+  va_start(args, total);
+
+  for (int i = 0; i < total; i++) {
+    Token* tkn = va_arg(args, Token*);
+    *err = token_list_append(list, tkn);
+    if (*err != TOKEN_ERROR_NIL) {
+      return NULL;
+    }
+  }
+
+  va_end(args);
+
+  return list;
 }
 
 void skip_space(const char* input, uint64_t* idx) {
@@ -300,7 +322,7 @@ Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
   } else {
     tkn->type = TOKEN_IDENTIFIER;
     tkn->value.identifier = (FatStr){
-        .start = (const uint8_t*)input,
+        .start = (const uint8_t*)start,
         .length = length,
     };
   }
@@ -391,7 +413,7 @@ Token* parse(const char* input, uint64_t* idx, TokenError* err) {
 }
 
 bool tkncmp(const Token* t1, const Token* t2) {
-  if (t1->type != t2->type) {
+  if (t1 == NULL || t2 == NULL || t1->type != t2->type) {
     return false;
   }
 

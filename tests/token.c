@@ -172,6 +172,172 @@ void test_parse_ternary(void) {
                  "(? (lt 1 2) \"yes\" \"no\")");
 }
 
+void test_parse_var(void) {
+  TokenError err;
+  run_parse_test("(var x y)",
+                 token_list_init(&err, 3,
+                                 &(Token){
+                                     .type = TOKEN_VAR,
+                                 },
+                                 &(Token){
+                                     .type = TOKEN_IDENTIFIER,
+                                     .value.identifier =
+                                         (FatStr){
+                                             .start = (uint8_t*)"x",
+                                             .length = 1,
+                                         },
+                                 },
+                                 &(Token){
+                                     .type = TOKEN_IDENTIFIER,
+                                     .value.identifier =
+                                         (FatStr){
+                                             .start = (uint8_t*)"y",
+                                             .length = 1,
+                                         },
+                                 }),
+                 "(var x y)");
+  TKN_PANIC(err);
+}
+
+void test_parse_do(void) {
+  char* input =
+      "(do"
+      "  (var x 1)"
+      "  (var y 2)"
+      "  (do"
+      "      (var x (+ y 3))"  // x = 5
+      "      (set y (+ x 4))"  // y = 9
+      "  )"
+      "  (+ x y)"  // return 10
+      ")";
+
+  char* expected_str =
+      "(do (var x 1) (var y 2) (do (var x (+ y 3)) (set y (+ x 4))) (+ x y))";
+
+  TokenError err;
+  Token* main = token_list_init(
+      &err, 5,
+      &(Token){
+          .type = TOKEN_DO,
+      },
+      token_list_init(&err, 3,
+                      &(Token){
+                          .type = TOKEN_VAR,
+                      },
+                      &(Token){
+                          .type = TOKEN_IDENTIFIER,
+                          .value.identifier =
+                              (FatStr){
+                                  .start = (uint8_t*)"x",
+                                  .length = 1,
+                              },
+                      },
+                      &(Token){
+                          .type = TOKEN_NUM,
+                          .value.num = 1,
+                      }),
+      token_list_init(&err, 3,
+                      &(Token){
+                          .type = TOKEN_VAR,
+                      },
+                      &(Token){
+                          .type = TOKEN_IDENTIFIER,
+                          .value.identifier =
+                              (FatStr){
+                                  .start = (uint8_t*)"y",
+                                  .length = 1,
+                              },
+                      },
+                      &(Token){
+                          .type = TOKEN_NUM,
+                          .value.num = 2,
+                      }),
+      token_list_init(
+          &err, 3,
+          &(Token){
+              .type = TOKEN_DO,
+          },
+          token_list_init(&err, 3,
+                          &(Token){
+                              .type = TOKEN_VAR,
+                          },
+                          &(Token){
+                              .type = TOKEN_IDENTIFIER,
+                              .value.identifier =
+                                  (FatStr){
+                                      .start = (uint8_t*)"x",
+                                      .length = 1,
+                                  },
+                          },
+                          token_list_init(&err, 3,
+                                          &(Token){
+                                              .type = TOKEN_ADD,
+                                          },
+                                          &(Token){
+                                              .type = TOKEN_IDENTIFIER,
+                                              .value.identifier =
+                                                  (FatStr){
+                                                      .start = (uint8_t*)"y",
+                                                      .length = 1,
+                                                  },
+                                          },
+                                          &(Token){
+                                              .type = TOKEN_NUM,
+                                              .value.num = 3,
+                                          })),
+          token_list_init(&err, 3,
+                          &(Token){
+                              .type = TOKEN_SET,
+                          },
+                          &(Token){
+                              .type = TOKEN_IDENTIFIER,
+                              .value.identifier =
+                                  (FatStr){
+                                      .start = (uint8_t*)"y",
+                                      .length = 1,
+                                  },
+                          },
+                          token_list_init(&err, 3,
+                                          &(Token){
+                                              .type = TOKEN_ADD,
+                                          },
+                                          &(Token){
+                                              .type = TOKEN_IDENTIFIER,
+                                              .value.identifier =
+                                                  (FatStr){
+                                                      .start = (uint8_t*)"x",
+                                                      .length = 1,
+                                                  },
+                                          },
+                                          &(Token){
+                                              .type = TOKEN_NUM,
+                                              .value.num = 4,
+                                          }))),
+      token_list_init(&err, 3,
+                      &(Token){
+                          .type = TOKEN_ADD,
+                      },
+                      &(Token){
+                          .type = TOKEN_IDENTIFIER,
+                          .value.identifier =
+                              (FatStr){
+                                  .start = (uint8_t*)"x",
+                                  .length = 1,
+                              },
+                      },
+                      &(Token){
+                          .type = TOKEN_IDENTIFIER,
+                          .value.identifier =
+                              (FatStr){
+                                  .start = (uint8_t*)"y",
+                                  .length = 1,
+                              },
+                      }));
+  TKN_PANIC(err);
+
+  run_parse_test(input, main, expected_str);
+}
+
 int main(void) {
   ADD_TEST(test_parse_num);
   ADD_TEST(test_parse_list_with_one_element);
@@ -179,6 +345,8 @@ int main(void) {
   ADD_TEST(test_parse_arithmetic);
   ADD_TEST(test_parse_string);
   ADD_TEST(test_parse_ternary);
+  ADD_TEST(test_parse_var);
+  ADD_TEST(test_parse_do);
   RUN_TESTS();
   return 0;
 }

@@ -1,6 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -78,6 +79,7 @@ typedef struct Token {
 #define DATA(x) ((x)->value.list.data)
 
 Token* token_list_make(TokenError* err);
+Token* token_list_init(TokenError* err, int total, ...);
 TokenError token_list_append(Token* list, Token* token);
 
 bool tkncmp(const Token* t1, const Token* t2);

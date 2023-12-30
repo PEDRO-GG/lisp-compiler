@@ -8,7 +8,7 @@
 
 #define ADDEND 10
 #define MAX_MSGS 30
-#define MAX_MSG_LENGTH 200
+#define MAX_MSG_LENGTH 500  // TODO: Change to use dynamic memory allocation
 
 static uint64_t length = 0;
 static uint64_t capacity = 0;
