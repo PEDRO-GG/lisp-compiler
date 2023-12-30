@@ -355,6 +355,23 @@ void test_parse_func(void) {
       "1)))))) (call fibonacci 10))");
 }
 
+void test_parse_loop(void) {
+  run_parse_test(
+      "(do"
+      "    (var a 0)"
+      "    (var b 0)"
+      "    (loop true (do"
+      "        (set a (+ a 1))"
+      "        (set b (+ b 1))"
+      "        (if (gt (+ a b) 10) (break))"
+      "    ))"
+      "    (* a b)"
+      ")",
+      NULL,
+      "(do (var a 0) (var b 0) (loop true (do (set a (+ a 1)) (set b (+ b 1)) "
+      "(if (gt (+ a b) 10) (break)))) (* a b))");
+}
+
 int main(void) {
   ADD_TEST(test_parse_num);
   ADD_TEST(test_parse_list_with_one_element);
@@ -365,6 +382,7 @@ int main(void) {
   ADD_TEST(test_parse_var);
   ADD_TEST(test_parse_do);
   ADD_TEST(test_parse_func);
+  ADD_TEST(test_parse_loop);
   RUN_TESTS();
   return 0;
 }
