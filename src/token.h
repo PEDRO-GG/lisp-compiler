@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "fatstr.h"
+
 typedef enum {
   TOKEN_NUM,
   TOKEN_CALL,
@@ -58,11 +60,6 @@ typedef struct Tokens {
   uint64_t capacity;
   uint64_t length;
 } Tokens;
-
-typedef struct FatStr {
-  const uint8_t* start;
-  uint64_t length;
-} FatStr;
 
 typedef struct Token {
   TokenType type;
