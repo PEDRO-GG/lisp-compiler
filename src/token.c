@@ -277,47 +277,47 @@ Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
     return NULL;
   }
 
-  if (strncmp(start, "call", length) == 0) {
+  if (strnstr(start, "call", length) != NULL) {
     tkn->type = TOKEN_CALL;
-  } else if (strncmp(start, "print", length) == 0) {
+  } else if (strnstr(start, "print", length) != NULL) {
     tkn->type = TOKEN_PRINT;
-  } else if (strncmp(start, "do", length) == 0) {
+  } else if (strnstr(start, "do", length) != NULL) {
     tkn->type = TOKEN_DO;
-  } else if (strncmp(start, "def", length) == 0) {
+  } else if (strnstr(start, "def", length) != NULL) {
     tkn->type = TOKEN_DEF;
-  } else if (strncmp(start, "then", length) == 0) {
+  } else if (strnstr(start, "then", length) != NULL) {
     tkn->type = TOKEN_THEN;
-  } else if (strncmp(start, "else", length) == 0) {
+  } else if (strnstr(start, "else", length) != NULL) {
     tkn->type = TOKEN_ELSE;
-  } else if (strncmp(start, "loop", length) == 0) {
+  } else if (strnstr(start, "loop", length) != NULL) {
     tkn->type = TOKEN_LOOP;
-  } else if (strncmp(start, "break", length) == 0) {
+  } else if (strnstr(start, "break", length) != NULL) {
     tkn->type = TOKEN_BREAK;
-  } else if (strncmp(start, "return", length) == 0) {
+  } else if (strnstr(start, "return", length) != NULL) {
     tkn->type = TOKEN_RETURN;
-  } else if (strncmp(start, "var", length) == 0) {
+  } else if (strnstr(start, "var", length) != NULL) {
     tkn->type = TOKEN_VAR;
-  } else if (strncmp(start, "set", length) == 0) {
+  } else if (strnstr(start, "set", length) != NULL) {
     tkn->type = TOKEN_SET;
-  } else if (strncmp(start, "if", length) == 0) {
+  } else if (strnstr(start, "if", length) != NULL) {
     tkn->type = TOKEN_IF;
-  } else if (strncmp(start, "true", length) == 0) {
+  } else if (strnstr(start, "true", length) != NULL) {
     tkn->type = TOKEN_TRUE;
-  } else if (strncmp(start, "false", length) == 0) {
+  } else if (strnstr(start, "false", length) != NULL) {
     tkn->type = TOKEN_FALSE;
-  } else if (strncmp(start, "?", length) == 0) {
+  } else if (strnstr(start, "?", length) != NULL) {
     tkn->type = TOKEN_TERNARY;
-  } else if (strncmp(start, "gt", length) == 0) {
+  } else if (strnstr(start, "gt", length) != NULL) {
     tkn->type = TOKEN_GT;
-  } else if (strncmp(start, "le", length) == 0) {
+  } else if (strnstr(start, "le", length) != NULL) {
     tkn->type = TOKEN_LE;
-  } else if (strncmp(start, "lt", length) == 0) {
+  } else if (strnstr(start, "lt", length) != NULL) {
     tkn->type = TOKEN_LT;
-  } else if (strncmp(start, "+", length) == 0) {
+  } else if (strnstr(start, "+", length) != NULL) {
     tkn->type = TOKEN_ADD;
-  } else if (strncmp(start, "-", length) == 0) {
+  } else if (strnstr(start, "-", length) != NULL) {
     tkn->type = TOKEN_MINUS;
-  } else if (strncmp(start, "*", length) == 0) {
+  } else if (strnstr(start, "*", length) != NULL) {
     tkn->type = TOKEN_MULT;
   } else {
     tkn->type = TOKEN_IDENTIFIER;
