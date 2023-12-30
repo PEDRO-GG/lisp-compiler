@@ -7,11 +7,13 @@ void run_parse_test(const char* input, const Token* expected_tkn,
   TokenError err;
   uint64_t idx = 0;
   Token* tkn = parse(input, &idx, &err);
-  char buffer[100] = {0};
+  char buffer[500] = {0};  // TODO: Change to dynamic memory allocation
   token_to_string(tkn, buffer);
 
   TEST_EQ(err, TOKEN_ERROR_NIL);
-  TEST_EQ(tkncmp(tkn, expected_tkn), true);
+  if (expected_tkn) {
+    TEST_EQ(tkncmp(tkn, expected_tkn), true);
+  }
   TEST_STRCMP(buffer, expected_str);
 }
 
@@ -338,6 +340,21 @@ void test_parse_do(void) {
   run_parse_test(input, main, expected_str);
 }
 
+void test_parse_func(void) {
+  run_parse_test(
+      "(do "
+      "    (def fibonacci (n)"
+      "        (if (le n 0)"
+      "            (then 0)"
+      "            (else (+ n (call fibonacci (- n 1))))))"
+      "    (call fibonacci 10)"
+      ")",
+      NULL,
+      "(do (def fibonacci (n) (if (le n 0) (then 0) (else (+ n (call fibonacci "
+      "(- n "
+      "1)))))) (call fibonacci 10))");
+}
+
 int main(void) {
   ADD_TEST(test_parse_num);
   ADD_TEST(test_parse_list_with_one_element);
@@ -347,6 +364,7 @@ int main(void) {
   ADD_TEST(test_parse_ternary);
   ADD_TEST(test_parse_var);
   ADD_TEST(test_parse_do);
+  ADD_TEST(test_parse_func);
   RUN_TESTS();
   return 0;
 }
