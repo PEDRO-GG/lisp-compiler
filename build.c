@@ -60,10 +60,7 @@ int calc_name_length(const char *str) {
   return i;
 }
 
-void compile(char *in_file, char *out_file) {
-  assert(in_file != NULL);
-  assert(out_file != NULL);
-
+void run_cmd(char *const *cmd) {
   // Run the command in a child process
   pid_t pid = fork();
   if (pid == -1) {
@@ -72,7 +69,6 @@ void compile(char *in_file, char *out_file) {
     exit(EXIT_FAILURE);
   } else if (pid == 0) {
     // Child process
-    char *const cmd[] = {CC, CFLAGS, in_file, "-o", out_file, NULL};
     print_cmd(cmd);
     execvp(CC, cmd);
 
@@ -94,7 +90,16 @@ void compile(char *in_file, char *out_file) {
   }
 }
 
-void build_exe(char *obj_dir) {
+void compile(char *in_file, char *out_file) {
+  assert(in_file != NULL);
+  assert(out_file != NULL);
+
+  char *const cmd[] = {CC, CFLAGS, in_file, "-o", out_file, NULL};
+
+  run_cmd(cmd);
+}
+
+void build_main_exe(char *obj_dir) {
   // Setup the command
   char **cmd = malloc(20 * sizeof(char *));
   if (cmd == NULL) {
@@ -227,7 +232,7 @@ void handle_build(void) {
   }
 
   // Link all the objs to create an executable
-  build_exe(OBJ_SRC_DIR);
+  build_main_exe(OBJ_SRC_DIR);
 
   // Close the directory
   closedir(dir);
