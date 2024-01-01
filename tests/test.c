@@ -59,7 +59,12 @@ void print_fail_msgs(void) {
   }
 }
 
-void reset_fail_msgs(void) { idx = 0; }
+void reset_fail_msgs(void) {
+  idx = 0;
+  for (int i = 0; i < MAX_MSGS; ++i) {
+    fail_msgs[i][0] = '\0';
+  }
+}
 
 void run_tests(const char* file_name) {
   assert(tests != NULL);
