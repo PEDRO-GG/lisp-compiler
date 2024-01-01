@@ -7,6 +7,10 @@
 // Assumes the `TOKEN_LIST` variant is active and it has length of 3
 // Example: (+ 1 2)
 EvaluateError evalute_operation(Token* token, Result* result) {
+  if (token->value.list.data[0] == NULL) {
+    return EVALUATE_ERROR_EXPECTED_OP;
+  }
+
   if (token->value.list.data[1] == NULL || token->value.list.data[2] == NULL) {
     return EVALUATE_ERROR_EXPECTED_OPERAND;
   }
@@ -61,14 +65,8 @@ EvaluateError evalute_list(Token* token, Result* result) {
     return EVALUATE_ERROR_EMPTY_LIST;
   }
 
-  if (length == 3) {
-    if (token->value.list.data[0] == NULL) {
-      return EVALUATE_ERROR_EXPECTED_OP;
-    }
-
-    if (token_is_op(token->value.list.data[0]->type)) {
-      return evalute_operation(token, result);
-    }
+  if (length == 3 && token_is_op(token->value.list.data[0]->type)) {
+    return evalute_operation(token, result);
   }
 
   return EVALUATE_ERROR_NIL;
