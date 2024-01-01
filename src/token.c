@@ -58,20 +58,12 @@ void token_to_string(Token* t, char* buffer) {
       strcat(buffer, num);
       break;
     }
-    case TOKEN_CALL: {
-      strcat(buffer, "call");
-      break;
-    }
     case TOKEN_LPAREN: {
       strcat(buffer, "(");
       break;
     }
     case TOKEN_RPAREN: {
       strcat(buffer, ")");
-      break;
-    }
-    case TOKEN_PRINT: {
-      strcat(buffer, "print");
       break;
     }
     case TOKEN_IDENTIFIER: {
@@ -81,110 +73,6 @@ void token_to_string(Token* t, char* buffer) {
     }
     case TOKEN_STRING: {
       strncat(buffer, (char*)t->value.string.start, t->value.string.length);
-      break;
-    }
-    case TOKEN_DO: {
-      strcat(buffer, "do");
-      break;
-    }
-    case TOKEN_DEF: {
-      strcat(buffer, "def");
-      break;
-    }
-    case TOKEN_TRUE: {
-      strcat(buffer, "true");
-      break;
-    }
-    case TOKEN_FALSE: {
-      strcat(buffer, "false");
-      break;
-    }
-    case TOKEN_THEN: {
-      strcat(buffer, "then");
-      break;
-    }
-    case TOKEN_ELSE: {
-      strcat(buffer, "else");
-      break;
-    }
-    case TOKEN_LOOP: {
-      strcat(buffer, "loop");
-      break;
-    }
-    case TOKEN_BREAK: {
-      strcat(buffer, "break");
-      break;
-    }
-    case TOKEN_RETURN: {
-      strcat(buffer, "return");
-      break;
-    }
-    case TOKEN_TERNARY: {
-      strcat(buffer, "?");
-      break;
-    }
-    case TOKEN_VAR: {
-      strcat(buffer, "var");
-      break;
-    }
-    case TOKEN_SET: {
-      strcat(buffer, "set");
-      break;
-    }
-    case TOKEN_IF: {
-      strcat(buffer, "if");
-      break;
-    }
-    case TOKEN_GT: {
-      strcat(buffer, "gt");
-      break;
-    }
-    case TOKEN_LE: {
-      strcat(buffer, "le");
-      break;
-    }
-    case TOKEN_EQ: {
-      strcat(buffer, "eq");
-      break;
-    }
-    case TOKEN_NE: {
-      strcat(buffer, "ne");
-      break;
-    }
-    case TOKEN_GE: {
-      strcat(buffer, "ge");
-      break;
-    }
-    case TOKEN_LT: {
-      strcat(buffer, "lt");
-      break;
-    }
-    case TOKEN_AND: {
-      strcat(buffer, "and");
-      break;
-    }
-    case TOKEN_OR: {
-      strcat(buffer, "or");
-      break;
-    }
-    case TOKEN_ADD: {
-      strcat(buffer, "+");
-      break;
-    }
-    case TOKEN_MINUS: {
-      strcat(buffer, "-");
-      break;
-    }
-    case TOKEN_MULT: {
-      strcat(buffer, "*");
-      break;
-    }
-    case TOKEN_DIV: {
-      strcat(buffer, "/");
-      break;
-    }
-    case TOKEN_MODULO: {
-      strcat(buffer, "%");
       break;
     }
     case TOKEN_LIST: {
@@ -202,8 +90,16 @@ void token_to_string(Token* t, char* buffer) {
       strcat(buffer, "illegal");
       break;
     }
-    default:
+    case TOKEN_COUNT: {
+      strcat(buffer, "count");
       break;
+    }
+    default: {
+      if (t->type < keywords_length) {
+        strcat(buffer, keywords[t->type].keyword);
+      }
+      break;
+    }
   }
 }
 
