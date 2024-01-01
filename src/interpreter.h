@@ -35,5 +35,6 @@ typedef enum {
 } EvaluateError;
 
 EvaluateError evalute(Token* token, Result* result);
+bool rescmp(const Result* r1, const Result* r2);
 
 #endif  // INTERPRETER_H

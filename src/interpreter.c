@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <strings.h>
 
 // Assumes the `TOKEN_LIST` variant is active and it has length of 3
 // Example: (+ 1 2)
@@ -106,4 +107,26 @@ EvaluateError evalute(Token* token, Result* result) {
   }
 
   return EVALUATE_ERROR_NIL;
+}
+
+bool rescmp(const Result* r1, const Result* r2) {
+  if (r1 == NULL || r2 == NULL || r1->type != r2->type) {
+    return false;
+  }
+
+  switch (r1->type) {
+    case RESULT_NUM: {
+      return r1->value.num == r2->value.num;
+    }
+    case RESULT_BOOL: {
+      return r1->value.boolean == r2->value.boolean;
+    }
+    case RESULT_STRING: {
+      return strncmp((char*)r1->value.string.start,
+                     (char*)r2->value.string.start,
+                     (size_t)r1->value.string.length) == 0;
+    }
+    default:
+      return false;
+  }
 }
