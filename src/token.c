@@ -449,3 +449,8 @@ bool tkncmp(const Token* t1, const Token* t2) {
 bool is_op(char c) {
   return c == '+' || c == '-' || c == '*' || c == '/' || c == '?';
 }
+
+bool token_is_op(TokenType t) {
+  return t == TOKEN_ADD || t == TOKEN_MINUS || t == TOKEN_MULT ||
+         t == TOKEN_DIV;
+}

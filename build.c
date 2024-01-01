@@ -177,10 +177,8 @@ void run_all_tests(void) {
       char *cmd[] = {
           CC, out_file, OBJ_TESTS_DIR "test.o", "-o", bin_file, NULL,
       };
-      print_cmd(cmd);
-      if (execvp(CC, cmd) == -1) {
-        perror("failed to link");
-      }
+      run_cmd(cmd);
+      printf("\n");
     }
   }
 }
