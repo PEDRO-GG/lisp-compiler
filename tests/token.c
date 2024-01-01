@@ -199,6 +199,29 @@ void test_parse_var(void) {
                                  }),
                  "(var x y)");
   TKN_PANIC(err);
+
+  run_parse_test("(var prin      bre)",
+                 token_list_init(&err, 3,
+                                 &(Token){
+                                     .type = TOKEN_VAR,
+                                 },
+                                 &(Token){
+                                     .type = TOKEN_IDENTIFIER,
+                                     .value.identifier =
+                                         (FatStr){
+                                             .start = (uint8_t*)"prin",
+                                             .length = 4,
+                                         },
+                                 },
+                                 &(Token){
+                                     .type = TOKEN_IDENTIFIER,
+                                     .value.identifier =
+                                         (FatStr){
+                                             .start = (uint8_t*)"bre",
+                                             .length = 3,
+                                         },
+                                 }),
+                 "(var prin bre)");
 }
 
 void test_parse_do(void) {

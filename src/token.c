@@ -8,6 +8,45 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct {
+  char* keyword;
+  size_t length;
+} Keyword;
+
+// Excludes list, identifier, string, illegal, count
+static const Keyword keywords[] = {
+    [TOKEN_CALL] = {"call", sizeof("call")},
+    [TOKEN_PRINT] = {"print", sizeof("print")},
+    [TOKEN_DO] = {"do", sizeof("do")},
+    [TOKEN_DEF] = {"def", sizeof("def")},
+    [TOKEN_TRUE] = {"true", sizeof("true")},
+    [TOKEN_FALSE] = {"false", sizeof("false")},
+    [TOKEN_THEN] = {"then", sizeof("then")},
+    [TOKEN_ELSE] = {"else", sizeof("else")},
+    [TOKEN_LOOP] = {"loop", sizeof("loop")},
+    [TOKEN_BREAK] = {"break", sizeof("break")},
+    [TOKEN_RETURN] = {"return", sizeof("return")},
+    [TOKEN_TERNARY] = {"?", sizeof("?")},
+    [TOKEN_VAR] = {"var", sizeof("var")},
+    [TOKEN_SET] = {"set", sizeof("set")},
+    [TOKEN_IF] = {"if", sizeof("if")},
+    [TOKEN_GT] = {"gt", sizeof("gt")},
+    [TOKEN_LE] = {"le", sizeof("le")},
+    [TOKEN_EQ] = {"eq", sizeof("eq")},
+    [TOKEN_NE] = {"ne", sizeof("ne")},
+    [TOKEN_GE] = {"ge", sizeof("ge")},
+    [TOKEN_LT] = {"lt", sizeof("lt")},
+    [TOKEN_AND] = {"&&", sizeof("&&")},
+    [TOKEN_OR] = {"||", sizeof("||")},
+    [TOKEN_ADD] = {"+", sizeof("+")},
+    [TOKEN_MINUS] = {"-", sizeof("-")},
+    [TOKEN_MULT] = {"*", sizeof("*")},
+    [TOKEN_DIV] = {"/", sizeof("/")},
+    [TOKEN_MODULO] = {"%", sizeof("%")},
+};
+
+static const size_t keywords_length = sizeof(keywords) / sizeof(keywords[0]);
+
 void token_to_string(Token* t, char* buffer) {
   assert(t != NULL);
   assert(buffer != NULL);
@@ -277,55 +316,22 @@ Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
     return NULL;
   }
 
-  if (strnstr(start, "call", length) != NULL) {
-    tkn->type = TOKEN_CALL;
-  } else if (strnstr(start, "print", length) != NULL) {
-    tkn->type = TOKEN_PRINT;
-  } else if (strnstr(start, "do", length) != NULL) {
-    tkn->type = TOKEN_DO;
-  } else if (strnstr(start, "def", length) != NULL) {
-    tkn->type = TOKEN_DEF;
-  } else if (strnstr(start, "then", length) != NULL) {
-    tkn->type = TOKEN_THEN;
-  } else if (strnstr(start, "else", length) != NULL) {
-    tkn->type = TOKEN_ELSE;
-  } else if (strnstr(start, "loop", length) != NULL) {
-    tkn->type = TOKEN_LOOP;
-  } else if (strnstr(start, "break", length) != NULL) {
-    tkn->type = TOKEN_BREAK;
-  } else if (strnstr(start, "return", length) != NULL) {
-    tkn->type = TOKEN_RETURN;
-  } else if (strnstr(start, "var", length) != NULL) {
-    tkn->type = TOKEN_VAR;
-  } else if (strnstr(start, "set", length) != NULL) {
-    tkn->type = TOKEN_SET;
-  } else if (strnstr(start, "if", length) != NULL) {
-    tkn->type = TOKEN_IF;
-  } else if (strnstr(start, "true", length) != NULL) {
-    tkn->type = TOKEN_TRUE;
-  } else if (strnstr(start, "false", length) != NULL) {
-    tkn->type = TOKEN_FALSE;
-  } else if (strnstr(start, "?", length) != NULL) {
-    tkn->type = TOKEN_TERNARY;
-  } else if (strnstr(start, "gt", length) != NULL) {
-    tkn->type = TOKEN_GT;
-  } else if (strnstr(start, "le", length) != NULL) {
-    tkn->type = TOKEN_LE;
-  } else if (strnstr(start, "lt", length) != NULL) {
-    tkn->type = TOKEN_LT;
-  } else if (strnstr(start, "+", length) != NULL) {
-    tkn->type = TOKEN_ADD;
-  } else if (strnstr(start, "-", length) != NULL) {
-    tkn->type = TOKEN_MINUS;
-  } else if (strnstr(start, "*", length) != NULL) {
-    tkn->type = TOKEN_MULT;
-  } else {
-    tkn->type = TOKEN_IDENTIFIER;
-    tkn->value.identifier = (FatStr){
-        .start = (const uint8_t*)start,
-        .length = length,
-    };
+  for (size_t i = 0; i < keywords_length; i++) {
+    Keyword keyword = keywords[i];
+
+    // Null terminator not considered
+    if (keyword.length - 1 == length &&
+        strncmp(keyword.keyword, start, length) == 0) {
+      tkn->type = (TokenType)i;
+      return tkn;
+    }
   }
+
+  tkn->type = TOKEN_IDENTIFIER;
+  tkn->value.identifier = (FatStr){
+      .start = (const uint8_t*)start,
+      .length = length,
+  };
 
   return tkn;
 }

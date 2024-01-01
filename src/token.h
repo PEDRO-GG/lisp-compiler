@@ -8,13 +8,9 @@
 #include "fatstr.h"
 
 typedef enum {
-  TOKEN_NUM,
-  TOKEN_CALL,
-  TOKEN_LPAREN,
-  TOKEN_RPAREN,
+  /* Keywords */
+  TOKEN_CALL = 0,
   TOKEN_PRINT,
-  TOKEN_IDENTIFIER,
-  TOKEN_STRING,
   TOKEN_DO,
   TOKEN_DEF,
   TOKEN_TRUE,
@@ -41,8 +37,16 @@ typedef enum {
   TOKEN_MULT,
   TOKEN_DIV,
   TOKEN_MODULO,
-  TOKEN_LIST,
+
+  /* Special tokens */
+  TOKEN_NUM,
+  TOKEN_LPAREN,
+  TOKEN_RPAREN,
+  TOKEN_IDENTIFIER,
+  TOKEN_STRING,
   TOKEN_ILLEGAL,
+  TOKEN_LIST,
+  TOKEN_COUNT,
 } TokenType;
 
 typedef enum {
