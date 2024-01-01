@@ -1,5 +1,6 @@
 #include "../src/interpreter.c"
 
+#include "../src/fatstr.c"
 #include "../src/token.c"
 #include "test.h"
 
@@ -52,10 +53,52 @@ void test_evaluate_arithmetic(void) {
                                });
 }
 
+void test_env_append(void) {
+  Var var1 = (Var){
+      .name =
+          (FatStr){
+              .start = (const uint8_t*)"a",
+              .length = 1,
+          },
+      .result =
+          (Result){
+              .type = RESULT_NUM,
+              .value.num = 1,
+          },
+  };
+
+  Var var2 = (Var){
+      .name =
+          (FatStr){
+              .start = (const uint8_t*)"b",
+              .length = 1,
+          },
+      .result =
+          (Result){
+              .type = RESULT_NUM,
+              .value.num = 2,
+          },
+  };
+
+  EvaluateError err;
+  Env* env = env_make(&err, NULL);
+  TEST_EQ(err, EVALUATE_ERROR_NIL);
+
+  err = env_append(env, var1);
+  TEST_EQ(err, EVALUATE_ERROR_NIL);
+
+  err = env_append(env, var2);
+  TEST_EQ(err, EVALUATE_ERROR_NIL);
+
+  TEST_EQ(varcmp(&var1, &env->data[0]), true);
+  TEST_EQ(varcmp(&var2, &env->data[1]), true);
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
   ADD_TEST(test_evaluate_arithmetic);
+  ADD_TEST(test_env_append);
   RUN_TESTS();
   return 0;
 }

@@ -65,8 +65,17 @@ EvaluateError evalute_list(Token* token, Result* result) {
     return EVALUATE_ERROR_EMPTY_LIST;
   }
 
-  if (length == 3 && token_is_op(token->value.list.data[0]->type)) {
+  // Example: (+ 1 2)
+  if (token_is_op(token->value.list.data[0]->type) && length == 3) {
     return evalute_operation(token, result);
+  }
+
+  // Example: (var a 1)
+  if (token->value.list.data[0]->type == TOKEN_VAR && length == 3) {
+  }
+
+  // Example (do ...)
+  if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
   }
 
   return EVALUATE_ERROR_NIL;
@@ -131,4 +140,49 @@ bool rescmp(const Result* r1, const Result* r2) {
     default:
       return false;
   }
+}
+
+bool varcmp(const Var* v1, const Var* v2) {
+  if (!fatstr_cmp(&v1->name, &v2->name)) return false;
+  if (!rescmp(&v1->result, &v2->result)) return false;
+  return true;
+}
+
+Env* env_make(EvaluateError* err, Env* next) {
+  Env* env = malloc(sizeof(Env));
+  if (env == NULL) {
+    *err = EVALUATE_ERROR_MALLOC;
+    return NULL;
+  }
+
+  env->capacity = 10;
+  env->length = 0;
+  env->next = next;
+  env->data = malloc(sizeof(Var) * env->capacity);
+  if (env->data == NULL) {
+    *err = EVALUATE_ERROR_MALLOC;
+    return NULL;
+  }
+
+  *err = EVALUATE_ERROR_NIL;
+
+  return env;
+}
+
+EvaluateError env_append(Env* env, Var var) {
+  assert(env != NULL);
+
+  // Request more memory if capacity is exceeded
+  if (env->length >= env->capacity) {
+    Var* tmp = realloc(env->data, sizeof(Var) * 10);
+    if (tmp == NULL) {
+      return EVALUATE_ERROR_REALLOC;
+    }
+    env->data = tmp;
+    env->capacity += 10;
+  }
+
+  // Append
+  env->data[env->length++] = var;
+  return EVALUATE_ERROR_NIL;
 }

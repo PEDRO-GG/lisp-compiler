@@ -22,6 +22,18 @@ typedef struct {
   } value;
 } Result;
 
+typedef struct {
+  FatStr name;
+  Result result;
+} Var;
+
+typedef struct Env {
+  Var* data;
+  uint64_t capacity;
+  uint64_t length;
+  struct Env* next;
+} Env;
+
 typedef enum {
   EVALUATE_ERROR_MALLOC,
   EVALUATE_ERROR_REALLOC,
@@ -36,5 +48,8 @@ typedef enum {
 
 EvaluateError evalute(Token* token, Result* result);
 bool rescmp(const Result* r1, const Result* r2);
+
+Env* env_make(EvaluateError* err, Env* next);
+EvaluateError env_append(Env* env, Var var);
 
 #endif  // INTERPRETER_H
