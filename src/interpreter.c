@@ -33,15 +33,19 @@ EvaluateError evalute_operation(Token* token, Result* result) {
   switch (token->value.list.data[0]->type) {
     case TOKEN_ADD: {
       result->value.num = left.value.num + right.value.num;
+      break;
     }
     case TOKEN_MINUS: {
       result->value.num = left.value.num - right.value.num;
+      break;
     }
     case TOKEN_MULT: {
       result->value.num = left.value.num * right.value.num;
+      break;
     }
     case TOKEN_DIV: {
       result->value.num = left.value.num / right.value.num;
+      break;
     }
     default:
       return EVALUATE_ERROR_EXPECTED_OP;

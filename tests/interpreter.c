@@ -33,9 +33,29 @@ void test_evaluate_bool(void) {
                             });
 }
 
+void test_evaluate_arithmetic(void) {
+  run_evaluate_test("(+ 1 2)", &(Result){
+                                   .type = RESULT_NUM,
+                                   .value.num = 3,
+                               });
+  run_evaluate_test("(- 1 2)", &(Result){
+                                   .type = RESULT_NUM,
+                                   .value.num = -1,
+                               });
+  run_evaluate_test("(/ 2 2)", &(Result){
+                                   .type = RESULT_NUM,
+                                   .value.num = 1,
+                               });
+  run_evaluate_test("(* 2 2)", &(Result){
+                                   .type = RESULT_NUM,
+                                   .value.num = 4,
+                               });
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
+  ADD_TEST(test_evaluate_arithmetic);
   RUN_TESTS();
   return 0;
 }
