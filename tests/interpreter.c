@@ -92,6 +92,8 @@ void test_env_append(void) {
 
   TEST_EQ(varcmp(&var1, &env->data[0]), true);
   TEST_EQ(varcmp(&var2, &env->data[1]), true);
+  TEST_EQ(env->length, 2);
+  TEST_EQ(env->capacity, 10);
 }
 
 int main(void) {
