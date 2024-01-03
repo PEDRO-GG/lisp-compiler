@@ -81,19 +81,24 @@ void test_env_append(void) {
   };
 
   EvaluateError err;
-  Env* env = env_make(&err, NULL);
+  Env* env1 = env_make(&err, NULL);
   TEST_EQ(err, EVALUATE_ERROR_NIL);
 
-  err = env_append(env, var1);
+  err = env_append(env1, var1);
   TEST_EQ(err, EVALUATE_ERROR_NIL);
 
-  err = env_append(env, var2);
+  err = env_append(env1, var2);
   TEST_EQ(err, EVALUATE_ERROR_NIL);
 
-  TEST_EQ(varcmp(&var1, &env->data[0]), true);
-  TEST_EQ(varcmp(&var2, &env->data[1]), true);
-  TEST_EQ(env->length, 2);
-  TEST_EQ(env->capacity, 10);
+  TEST_EQ(varcmp(&var1, &env1->data[0]), true);
+  TEST_EQ(varcmp(&var2, &env1->data[1]), true);
+  TEST_EQ(env1->length, 2);
+  TEST_EQ(env1->capacity, 10);
+
+  Env* env2 = env_make(&err, env1);
+  TEST_EQ(env2->next == env1, true);
+  TEST_EQ(varcmp(&var1, &env2->next->data[0]), true);
+  TEST_EQ(varcmp(&var2, &env2->next->data[1]), true);
 }
 
 int main(void) {
