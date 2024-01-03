@@ -42,14 +42,18 @@ typedef enum {
   EVALUATE_ERROR_EXPECTED_OP,
   EVALUATE_ERROR_UNMATCHED_TYPES,
   EVALUATE_ERROR_EXPECTED_OPERAND,
+  EVALUATE_ERROR_EXPECTED_IDENT,
+  EVALUATE_ERROR_NO_SCOPE,
+  EVALUATE_ERROR_DUPLICATE_IDENT,
   EVALUATE_ERROR_ILLEGAL_TOKEN,
   EVALUATE_ERROR_NIL,
 } EvaluateError;
 
-EvaluateError evalute(Token* token, Result* result);
+EvaluateError evalute(Token* token, Env* env, Result* result);
 bool rescmp(const Result* r1, const Result* r2);
 
 Env* env_make(EvaluateError* err, Env* next);
 EvaluateError env_append(Env* env, Var var);
+bool env_contains(Env* env, FatStr* str);
 
 #endif  // INTERPRETER_H

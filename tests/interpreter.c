@@ -15,7 +15,7 @@ void run_evaluate_test(const char* input, const Result* expected_result) {
   tkn = parse(input, &idx, &err1);
   TEST_EQ(err1, TOKEN_ERROR_NIL);
 
-  err2 = evalute(tkn, &result);
+  err2 = evalute(tkn, NULL, &result);
   TEST_EQ(err2, EVALUATE_ERROR_NIL);
   TEST_EQ(rescmp(&result, expected_result), true);
 }
@@ -101,11 +101,28 @@ void test_env_append(void) {
   TEST_EQ(varcmp(&var2, &env2->next->data[1]), true);
 }
 
+void test_evaluate_var(void) {
+  run_evaluate_test("(do (var my_var 1))", &(Result){
+                                               .type = RESULT_NUM,
+                                               .value.num = 1,
+                                           });
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 2,
+      });
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
   ADD_TEST(test_evaluate_arithmetic);
   ADD_TEST(test_env_append);
+  ADD_TEST(test_evaluate_var);
   RUN_TESTS();
   return 0;
 }

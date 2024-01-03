@@ -201,7 +201,7 @@ Token* parse_num(const char* input, uint64_t* idx, TokenError* err) {
 Token* parse_chars(const char* input, uint64_t* idx, TokenError* err) {
   uint64_t length = 0;
   const char* start = input + *idx;
-  while (isalpha(input[*idx]) || is_op(input[*idx])) {
+  while (isalpha(input[*idx]) || is_op(input[*idx]) || input[*idx] == '_') {
     (*idx)++;
     length++;
   }
