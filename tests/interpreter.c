@@ -117,12 +117,55 @@ void test_evaluate_var(void) {
       });
 }
 
+void test_evaluate_set(void) {
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (set a 200)"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 200,
+      });
+
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (var c 3)"
+      "    (set b 1000)"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 1000,
+      });
+
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (var c 3)"
+      "    (var d 4)"
+      "    (do"
+      "         (var e 5)"
+      "         (var f 6)"
+      "         (var g 7)"
+      "         (set b 1000)"
+      "    )"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 1000,
+      });
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
   ADD_TEST(test_evaluate_arithmetic);
   ADD_TEST(test_env_append);
   ADD_TEST(test_evaluate_var);
+  ADD_TEST(test_evaluate_set);
   RUN_TESTS();
   return 0;
 }

@@ -107,6 +107,32 @@ EvaluateError evaluate_var(Token* token, Env* env, Result* result) {
   return EVALUATE_ERROR_NIL;
 }
 
+// Assumes the `TOKEN_LIST` variant is active and it has length of 3
+// Example: (set a 1)
+EvaluateError evaluate_set(Token* token, Env* env, Result* result) {
+  if (token->value.list.data[1]->type != TOKEN_IDENTIFIER) {
+    return EVALUATE_ERROR_EXPECTED_IDENT;
+  }
+
+  if (env == NULL) {
+    return EVALUATE_ERROR_NO_SCOPE;
+  }
+
+  Var* to_modify = env_find(env, &token->value.list.data[1]->value.identifier);
+  if (to_modify == NULL) {
+    return EVALUATE_ERROR_VAR_NOT_FOUND;
+  }
+
+  EvaluateError err = evalute(token->value.list.data[2], env, result);
+  if (err != EVALUATE_ERROR_NIL) {
+    return err;
+  }
+
+  to_modify->result = *result;
+
+  return EVALUATE_ERROR_NIL;
+}
+
 EvaluateError evalute_list(Token* token, Env* env, Result* result) {
   uint64_t length = token->value.list.length;
 
@@ -122,6 +148,11 @@ EvaluateError evalute_list(Token* token, Env* env, Result* result) {
   // Example: (var a 1)
   if (token->value.list.data[0]->type == TOKEN_VAR && length == 3) {
     return evaluate_var(token, env, result);
+  }
+
+  // Example (set a 1)
+  if (token->value.list.data[0]->type == TOKEN_SET && length == 3) {
+    return evaluate_set(token, env, result);
   }
 
   // Example (do ...)
@@ -248,4 +279,20 @@ bool env_contains(Env* env, FatStr* str) {
   }
 
   return false;
+}
+
+Var* env_find(Env* env, FatStr* str) {
+  if (env == NULL || str == NULL) return NULL;
+
+  for (uint64_t i = 0; i < env->length; i++) {
+    if (fatstr_cmp(&env->data[i].name, str)) {
+      return env->data + i;
+    }
+  }
+
+  if (env->next != NULL) {
+    return env_find(env->next, str);
+  }
+
+  return NULL;
 }
