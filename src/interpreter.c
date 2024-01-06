@@ -176,7 +176,7 @@ EvaluateError evaluate_set(Token* token, Env* env, Result* result) {
   return EVALUATE_ERROR_NIL;
 }
 
-EvaluateError evalute_list(Token* token, Env* env, Result* result) {
+EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
   uint64_t length = token->value.list.length;
 
   if (length == 0) {
@@ -235,7 +235,7 @@ EvaluateError evalute(Token* token, Env* env, Result* result) {
       break;
     }
     case TOKEN_LIST: {
-      return evalute_list(token, env, result);
+      return evaluate_list(token, env, result);
     }
     case TOKEN_IDENTIFIER: {
       Var* found = env_find(env, &token->value.identifier);
