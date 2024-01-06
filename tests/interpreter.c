@@ -200,6 +200,60 @@ void test_evaluate_binop(void) {
           .type = RESULT_NUM,
           .value.num = 3,
       });
+  run_evaluate_test(
+      "(do "
+      "     (var a true)"
+      "     (set a (eq a true))"
+      ")",
+      &(Result){
+          .type = RESULT_BOOL,
+          .value.boolean = true,
+      });
+  run_evaluate_test(
+      "(do "
+      "     (var a (+ 1 2))"
+      "     (set a (eq a 3))"
+      ")",
+      &(Result){
+          .type = RESULT_BOOL,
+          .value.boolean = true,
+      });
+  run_evaluate_test(
+      "(do "
+      "     (var a (+ 1 2))"
+      "     (set a (ge a 3))"
+      ")",
+      &(Result){
+          .type = RESULT_BOOL,
+          .value.boolean = true,
+      });
+  run_evaluate_test(
+      "(do "
+      "     (var a (+ 1 2))"
+      "     (set a (gt a 3))"
+      ")",
+      &(Result){
+          .type = RESULT_BOOL,
+          .value.boolean = false,
+      });
+  run_evaluate_test(
+      "(do "
+      "     (var a (+ 1 2))"
+      "     (set a (and (gt a 3) (eq a 3)))"
+      ")",
+      &(Result){
+          .type = RESULT_BOOL,
+          .value.boolean = false,
+      });
+  run_evaluate_test(
+      "(do "
+      "     (var a (+ 1 2))"
+      "     (set a (or (gt a 3) (eq a 3)))"
+      ")",
+      &(Result){
+          .type = RESULT_BOOL,
+          .value.boolean = true,
+      });
 }
 
 int main(void) {

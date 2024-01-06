@@ -33,53 +33,64 @@ EvaluateError evalute_operation(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_UNMATCHED_TYPES;
   }
 
-  result->type = RESULT_NUM;
   switch (token->value.list.data[0]->type) {
     case TOKEN_ADD: {
+      result->type = RESULT_NUM;
       result->value.num = left.value.num + right.value.num;
       break;
     }
     case TOKEN_MINUS: {
+      result->type = RESULT_NUM;
       result->value.num = left.value.num - right.value.num;
       break;
     }
     case TOKEN_MULT: {
+      result->type = RESULT_NUM;
       result->value.num = left.value.num * right.value.num;
       break;
     }
     case TOKEN_DIV: {
+      result->type = RESULT_NUM;
       result->value.num = left.value.num / right.value.num;
       break;
     }
     case TOKEN_EQ: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean == right.value.boolean;
       break;
     }
     case TOKEN_NE: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean != right.value.boolean;
       break;
     }
     case TOKEN_GE: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean >= right.value.boolean;
       break;
     }
     case TOKEN_GT: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean > right.value.boolean;
       break;
     }
     case TOKEN_LE: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean <= right.value.boolean;
       break;
     }
     case TOKEN_LT: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean < right.value.boolean;
       break;
     }
     case TOKEN_AND: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean && right.value.boolean;
       break;
     }
     case TOKEN_OR: {
+      result->type = RESULT_BOOL;
       result->value.boolean = left.value.boolean || right.value.boolean;
       break;
     }

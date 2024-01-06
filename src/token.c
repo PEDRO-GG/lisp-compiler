@@ -354,5 +354,7 @@ bool is_op(char c) {
 
 bool token_is_op(TokenType t) {
   return t == TOKEN_ADD || t == TOKEN_MINUS || t == TOKEN_MULT ||
-         t == TOKEN_DIV;
+         t == TOKEN_DIV || t == TOKEN_EQ || t == TOKEN_NE || t == TOKEN_GE ||
+         t == TOKEN_GT || t == TOKEN_LE || t == TOKEN_LT || t == TOKEN_AND ||
+         t == TOKEN_OR;
 }
