@@ -29,7 +29,7 @@ EvaluateError evalute_operation(Token* token, Env* env, Result* result) {
     return err;
   }
 
-  if (token->value.list.data[1]->type != token->value.list.data[2]->type) {
+  if (left.type != right.type) {
     return EVALUATE_ERROR_UNMATCHED_TYPES;
   }
 
@@ -49,6 +49,38 @@ EvaluateError evalute_operation(Token* token, Env* env, Result* result) {
     }
     case TOKEN_DIV: {
       result->value.num = left.value.num / right.value.num;
+      break;
+    }
+    case TOKEN_EQ: {
+      result->value.boolean = left.value.boolean == right.value.boolean;
+      break;
+    }
+    case TOKEN_NE: {
+      result->value.boolean = left.value.boolean != right.value.boolean;
+      break;
+    }
+    case TOKEN_GE: {
+      result->value.boolean = left.value.boolean >= right.value.boolean;
+      break;
+    }
+    case TOKEN_GT: {
+      result->value.boolean = left.value.boolean > right.value.boolean;
+      break;
+    }
+    case TOKEN_LE: {
+      result->value.boolean = left.value.boolean <= right.value.boolean;
+      break;
+    }
+    case TOKEN_LT: {
+      result->value.boolean = left.value.boolean < right.value.boolean;
+      break;
+    }
+    case TOKEN_AND: {
+      result->value.boolean = left.value.boolean && right.value.boolean;
+      break;
+    }
+    case TOKEN_OR: {
+      result->value.boolean = left.value.boolean || right.value.boolean;
       break;
     }
     default:
@@ -193,6 +225,14 @@ EvaluateError evalute(Token* token, Env* env, Result* result) {
     }
     case TOKEN_LIST: {
       return evalute_list(token, env, result);
+    }
+    case TOKEN_IDENTIFIER: {
+      Var* found = env_find(env, &token->value.identifier);
+      if (found == NULL) {
+        return EVALUATE_ERROR_VAR_NOT_FOUND;
+      }
+      (*result) = found->result;
+      break;
     }
     default: {
       return EVALUATE_ERROR_ILLEGAL_TOKEN;

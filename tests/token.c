@@ -111,6 +111,21 @@ void test_parse_arithmetic(void) {
 
   run_parse_test(" (   + 1 2   ) ", list1, "(+ 1 2)");
   run_parse_test(" (  - 1 2   ) ", list2, "(- 1 2)");
+
+  run_parse_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (var c 3)"
+      "    (var d 4)"
+      "    (do"
+      "         (var e (* (+ a b) c))"
+      "         (var f (/ e c))"
+      "    )"
+      ")",
+      NULL,
+      "(do (var a 1) (var b 2) (var c 3) (var d 4) (do (var e (* (+ a b) c)) "
+      "(var f (/ e c))))");
 }
 
 void test_parse_string(void) {

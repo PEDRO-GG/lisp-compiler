@@ -159,6 +159,49 @@ void test_evaluate_set(void) {
       });
 }
 
+void test_evaluate_binop(void) {
+  run_evaluate_test(
+      "(do "
+      "    (var a (* 3 3))"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 9,
+      });
+  run_evaluate_test(
+      "(do "
+      "    (var b (/ 3 3))"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 1,
+      });
+  run_evaluate_test(
+      "(do "
+      "    (var a 3)"
+      "    (var b (/ a 3))"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 1,
+      });
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (var c 3)"
+      "    (var d 4)"
+      "    (do"
+      "         (var e (* (+ a b) c))"
+      "         (var f (/ e c))"
+      "    )"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 3,
+      });
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
@@ -166,6 +209,7 @@ int main(void) {
   ADD_TEST(test_env_append);
   ADD_TEST(test_evaluate_var);
   ADD_TEST(test_evaluate_set);
+  ADD_TEST(test_evaluate_binop);
   RUN_TESTS();
   return 0;
 }
