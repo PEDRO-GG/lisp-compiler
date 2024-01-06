@@ -115,6 +115,18 @@ void test_evaluate_var(void) {
           .type = RESULT_NUM,
           .value.num = 2,
       });
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (do"
+      "         (var a 100)"
+      "    )"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 100,
+      });
 }
 
 void test_evaluate_set(void) {
@@ -156,6 +168,21 @@ void test_evaluate_set(void) {
       &(Result){
           .type = RESULT_NUM,
           .value.num = 1000,
+      });
+
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (do"
+      "         (var a 100)"  // Shadowing
+      "         (set b (+ a 200))"
+      "    )"
+      "    b"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 300,
       });
 }
 
