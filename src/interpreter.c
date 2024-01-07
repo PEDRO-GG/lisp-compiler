@@ -6,7 +6,7 @@
 
 // Assumes the `TOKEN_LIST` variant is active and it has length of 3
 // Example: (+ 1 2)
-EvaluateError evalute_operation(Token* token, Env* env, Result* result) {
+EvaluateError evaluate_operation(Token* token, Env* env, Result* result) {
   if (token->value.list.data[0] == NULL) {
     return EVALUATE_ERROR_EXPECTED_OP;
   }
@@ -19,12 +19,12 @@ EvaluateError evalute_operation(Token* token, Env* env, Result* result) {
   Result left;
   Result right;
 
-  err = evalute(token->value.list.data[1], env, &left);
+  err = evaluate(token->value.list.data[1], env, &left);
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
 
-  err = evalute(token->value.list.data[2], env, &right);
+  err = evaluate(token->value.list.data[2], env, &right);
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
@@ -102,7 +102,7 @@ EvaluateError evalute_operation(Token* token, Env* env, Result* result) {
 }
 
 // Assumes the `TOKEN_DO` variant is active
-EvaluateError evalute_do(Token* token, Env* env, Result* result) {
+EvaluateError evaluate_do(Token* token, Env* env, Result* result) {
   EvaluateError err;
   Env* new_env = env_make(&err, env);
   if (err != EVALUATE_ERROR_NIL) {
@@ -110,7 +110,7 @@ EvaluateError evalute_do(Token* token, Env* env, Result* result) {
   }
 
   for (uint64_t i = 1; i < token->value.list.length; i++) {
-    err = evalute(token->value.list.data[i], new_env, result);
+    err = evaluate(token->value.list.data[i], new_env, result);
     if (err != EVALUATE_ERROR_NIL) {
       return err;
     }
@@ -134,7 +134,7 @@ EvaluateError evaluate_var(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_DUPLICATE_IDENT;
   }
 
-  EvaluateError err = evalute(token->value.list.data[2], env, result);
+  EvaluateError err = evaluate(token->value.list.data[2], env, result);
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
@@ -166,7 +166,7 @@ EvaluateError evaluate_set(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_VAR_NOT_FOUND;
   }
 
-  EvaluateError err = evalute(token->value.list.data[2], env, result);
+  EvaluateError err = evaluate(token->value.list.data[2], env, result);
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
@@ -185,7 +185,7 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
 
   // Example: (+ 1 2)
   if (token_is_op(token->value.list.data[0]->type) && length == 3) {
-    return evalute_operation(token, env, result);
+    return evaluate_operation(token, env, result);
   }
 
   // Example: (var a 1)
@@ -200,13 +200,13 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
 
   // Example (do ...)
   if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
-    return evalute_do(token, env, result);
+    return evaluate_do(token, env, result);
   }
 
   return EVALUATE_ERROR_NIL;
 }
 
-EvaluateError evalute(Token* token, Env* env, Result* result) {
+EvaluateError evaluate(Token* token, Env* env, Result* result) {
   assert(result != NULL);
 
   if (token == NULL) {

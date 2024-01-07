@@ -15,7 +15,7 @@ void run_evaluate_test(const char* input, const Result* expected_result) {
   tkn = parse(input, &idx, &err1);
   TEST_EQ(err1, TOKEN_ERROR_NIL);
 
-  err2 = evalute(tkn, NULL, &result);
+  err2 = evaluate(tkn, NULL, &result);
   TEST_EQ(err2, EVALUATE_ERROR_NIL);
   TEST_EQ(rescmp(&result, expected_result), true);
 }

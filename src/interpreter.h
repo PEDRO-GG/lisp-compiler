@@ -50,7 +50,7 @@ typedef enum {
   EVALUATE_ERROR_NIL,
 } EvaluateError;
 
-EvaluateError evalute(Token* token, Env* env, Result* result);
+EvaluateError evaluate(Token* token, Env* env, Result* result);
 bool rescmp(const Result* r1, const Result* r2);
 
 Env* env_make(EvaluateError* err, Env* next);
