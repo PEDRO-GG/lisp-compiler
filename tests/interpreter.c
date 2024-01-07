@@ -283,6 +283,49 @@ void test_evaluate_binop(void) {
       });
 }
 
+void test_evaluate_if(void) {
+  run_evaluate_test("(if true \"YES\")",
+                    &(Result){
+                        .type = RESULT_STRING,
+                        .value.string =
+                            (FatStr){
+                                .start = (const uint8_t*)"\"YES\"",
+                                .length = 5,
+                            },
+                    });
+  run_evaluate_test("(if false \"YES\")", &(Result){
+                                              .type = RESULT_BOOL,
+                                              .value.boolean = false,
+                                          });
+  run_evaluate_test("(if true \"YES\" \"NO\")",
+                    &(Result){
+                        .type = RESULT_STRING,
+                        .value.string =
+                            (FatStr){
+                                .start = (const uint8_t*)"\"YES\"",
+                                .length = 5,
+                            },
+                    });
+  run_evaluate_test("(if false \"YES\" \"NO\")",
+                    &(Result){
+                        .type = RESULT_STRING,
+                        .value.string =
+                            (FatStr){
+                                .start = (const uint8_t*)"\"NO\"",
+                                .length = 4,
+                            },
+                    });
+  //   run_evaluate_test(
+  //       "(if (ge 10 5)"
+  //       "    (then \"YES\")"
+  //       "    (else \"NO\")"
+  //       ")",
+  //       &(Result){
+  //           .type = RESULT_BOOL,
+  //           .value.boolean = true,
+  //       });
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
@@ -291,6 +334,7 @@ int main(void) {
   ADD_TEST(test_evaluate_var);
   ADD_TEST(test_evaluate_set);
   ADD_TEST(test_evaluate_binop);
+  ADD_TEST(test_evaluate_if);
   RUN_TESTS();
   return 0;
 }

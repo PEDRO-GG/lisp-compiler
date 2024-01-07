@@ -101,7 +101,7 @@ EvaluateError evaluate_operation(Token* token, Env* env, Result* result) {
   return EVALUATE_ERROR_NIL;
 }
 
-// Assumes the `TOKEN_DO` variant is active
+// Assumes the `TOKEN_LIST` variant is active
 EvaluateError evaluate_do(Token* token, Env* env, Result* result) {
   EvaluateError err;
   Env* new_env = env_make(&err, env);
@@ -114,6 +114,33 @@ EvaluateError evaluate_do(Token* token, Env* env, Result* result) {
     if (err != EVALUATE_ERROR_NIL) {
       return err;
     }
+  }
+
+  return EVALUATE_ERROR_NIL;
+}
+
+// Assumes the `TOKEN_LIST` variant is active and length is 3 or 4
+EvaluateError evaluate_if(Token* token, Env* env, Result* result) {
+  EvaluateError err;
+  Env* new_env = env_make(&err, env);
+  if (err != EVALUATE_ERROR_NIL) {
+    return err;
+  }
+
+  err = evaluate(token->value.list.data[1], new_env, result);
+  if (err != EVALUATE_ERROR_NIL) {
+    return err;
+  }
+
+  if (result->type == RESULT_BOOL) {
+    if (result->value.boolean == true) {
+      return evaluate(token->value.list.data[2], new_env, result);
+    }
+    if (token->value.list.length == 4) {
+      return evaluate(token->value.list.data[3], new_env, result);
+    }
+  } else {
+    return EVALUATE_ERROR_EXPECTED_BOOL;
   }
 
   return EVALUATE_ERROR_NIL;
@@ -193,14 +220,21 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
     return evaluate_var(token, env, result);
   }
 
-  // Example (set a 1)
+  // Example: (set a 1)
   if (token->value.list.data[0]->type == TOKEN_SET && length == 3) {
     return evaluate_set(token, env, result);
   }
 
-  // Example (do ...)
+  // Example: (do ...)
   if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
     return evaluate_do(token, env, result);
+  }
+
+  // Example: (if true \"YES\" \"NO\")
+  // Example: (if true \"YES\")
+  if (token->value.list.data[0]->type == TOKEN_IF &&
+      (length == 3 || length == 4)) {
+    return evaluate_if(token, env, result);
   }
 
   return EVALUATE_ERROR_NIL;
