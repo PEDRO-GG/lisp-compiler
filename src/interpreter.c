@@ -66,22 +66,22 @@ EvaluateError evaluate_operation(Token* token, Env* env, Result* result) {
     }
     case TOKEN_GE: {
       result->type = RESULT_BOOL;
-      result->value.boolean = left.value.boolean >= right.value.boolean;
+      result->value.boolean = left.value.num >= right.value.num;
       break;
     }
     case TOKEN_GT: {
       result->type = RESULT_BOOL;
-      result->value.boolean = left.value.boolean > right.value.boolean;
+      result->value.boolean = left.value.num > right.value.num;
       break;
     }
     case TOKEN_LE: {
       result->type = RESULT_BOOL;
-      result->value.boolean = left.value.boolean <= right.value.boolean;
+      result->value.boolean = left.value.num <= right.value.num;
       break;
     }
     case TOKEN_LT: {
       result->type = RESULT_BOOL;
-      result->value.boolean = left.value.boolean < right.value.boolean;
+      result->value.boolean = left.value.num < right.value.num;
       break;
     }
     case TOKEN_AND: {

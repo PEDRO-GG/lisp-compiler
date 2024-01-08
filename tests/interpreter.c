@@ -315,15 +315,24 @@ void test_evaluate_if(void) {
                                 .length = 4,
                             },
                     });
-  //   run_evaluate_test(
-  //       "(if (ge 10 5)"
-  //       "    (then \"YES\")"
-  //       "    (else \"NO\")"
-  //       ")",
-  //       &(Result){
-  //           .type = RESULT_BOOL,
-  //           .value.boolean = true,
-  //       });
+  run_evaluate_test(
+      "(if (ge 10 5)"
+      "    (+ 10 5)"
+      "    1"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 15,
+      });
+  run_evaluate_test(
+      "(if (le 10 5)"
+      "    (+ 10 5)"
+      "    1"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 1,
+      });
 }
 
 int main(void) {
