@@ -203,6 +203,38 @@ EvaluateError evaluate_set(Token* token, Env* env, Result* result) {
   return EVALUATE_ERROR_NIL;
 }
 
+// Assumes the `TOKEN_LIST` variant is active and it has length of 3
+// Example: (loop <condition> <body>)
+EvaluateError evaluate_loop(Token* token, Env* env, Result* result) {
+  EvaluateError err;
+  Env* new_env;
+  Result condition_result;
+
+  new_env = env_make(&err, env);
+  if (err != EVALUATE_ERROR_NIL) {
+    return err;
+  }
+
+  while (true) {
+    err = evaluate(token->value.list.data[1], new_env, &condition_result);
+    if (err != EVALUATE_ERROR_NIL) {
+      return err;
+    }
+
+    if (condition_result.type == RESULT_BOOL) {
+      if (condition_result.value.boolean == true) {
+        err = evaluate(token->value.list.data[2], new_env, result);
+        if (err != EVALUATE_ERROR_NIL) {
+          return err;
+        }
+      } else {
+        return EVALUATE_ERROR_NIL;
+      }
+    }
+  }
+  return EVALUATE_ERROR_NIL;
+}
+
 EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
   uint64_t length = token->value.list.length;
 
@@ -235,6 +267,11 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
   if (token->value.list.data[0]->type == TOKEN_IF &&
       (length == 3 || length == 4)) {
     return evaluate_if(token, env, result);
+  }
+
+  // Example: (loop <condition> <body> )
+  if (token->value.list.data[0]->type == TOKEN_LOOP && length == 3) {
+    return evaluate_loop(token, env, result);
   }
 
   return EVALUATE_ERROR_NIL;

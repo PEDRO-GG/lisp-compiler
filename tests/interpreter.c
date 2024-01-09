@@ -335,6 +335,31 @@ void test_evaluate_if(void) {
       });
 }
 
+void test_evaluate_loops(void) {
+  run_evaluate_test(
+      "(do"
+      "    (var i 0)"
+      "    (loop (lt i 10) "
+      "         (set i (+ i 1))"
+      "    )"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 10,
+      });
+  run_evaluate_test(
+      "(do"
+      "    (var i 10)"
+      "    (loop (gt i 1) "
+      "         (set i (- i 1))"
+      "    )"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 1,
+      });
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
@@ -344,6 +369,7 @@ int main(void) {
   ADD_TEST(test_evaluate_set);
   ADD_TEST(test_evaluate_binop);
   ADD_TEST(test_evaluate_if);
+  ADD_TEST(test_evaluate_loops);
   RUN_TESTS();
   return 0;
 }
