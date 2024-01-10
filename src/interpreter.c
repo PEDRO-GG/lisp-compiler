@@ -122,22 +122,27 @@ EvaluateError evaluate_do(Token* token, Env* env, Result* result) {
 // Assumes the `TOKEN_LIST` variant is active and length is 3 or 4
 EvaluateError evaluate_if(Token* token, Env* env, Result* result) {
   EvaluateError err;
-  Env* new_env = env_make(&err, env);
+  Env* new_env;
+  Result condition_result;
+
+  new_env = env_make(&err, env);
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
 
-  err = evaluate(token->value.list.data[1], new_env, result);
+  err = evaluate(token->value.list.data[1], new_env, &condition_result);
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
 
-  if (result->type == RESULT_BOOL) {
-    if (result->value.boolean == true) {
+  if (condition_result.type == RESULT_BOOL) {
+    if (condition_result.value.boolean == true) {
       return evaluate(token->value.list.data[2], new_env, result);
     }
     if (token->value.list.length == 4) {
       return evaluate(token->value.list.data[3], new_env, result);
+    } else {  // No else
+      result->type = RESULT_NOOP;
     }
   } else {
     return EVALUATE_ERROR_EXPECTED_BOOL;
@@ -224,6 +229,9 @@ EvaluateError evaluate_loop(Token* token, Env* env, Result* result) {
     if (condition_result.type == RESULT_BOOL) {
       if (condition_result.value.boolean == true) {
         err = evaluate(token->value.list.data[2], new_env, result);
+        if (err == EVALUATE_ERROR_BREAK) {
+          return EVALUATE_ERROR_NIL;
+        }
         if (err != EVALUATE_ERROR_NIL) {
           return err;
         }
@@ -272,6 +280,11 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
   // Example: (loop <condition> <body> )
   if (token->value.list.data[0]->type == TOKEN_LOOP && length == 3) {
     return evaluate_loop(token, env, result);
+  }
+
+  // Example: (break)
+  if (token->value.list.data[0]->type == TOKEN_BREAK && length == 1) {
+    return EVALUATE_ERROR_BREAK;
   }
 
   return EVALUATE_ERROR_NIL;
@@ -340,6 +353,9 @@ bool rescmp(const Result* r1, const Result* r2) {
       return strncmp((char*)r1->value.string.start,
                      (char*)r2->value.string.start,
                      (size_t)r1->value.string.length) == 0;
+    }
+    case RESULT_NOOP: {
+      return true;
     }
     default:
       return false;

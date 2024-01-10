@@ -294,8 +294,7 @@ void test_evaluate_if(void) {
                             },
                     });
   run_evaluate_test("(if false \"YES\")", &(Result){
-                                              .type = RESULT_BOOL,
-                                              .value.boolean = false,
+                                              .type = RESULT_NOOP,
                                           });
   run_evaluate_test("(if true \"YES\" \"NO\")",
                     &(Result){
@@ -357,6 +356,18 @@ void test_evaluate_loops(void) {
       &(Result){
           .type = RESULT_NUM,
           .value.num = 1,
+      });
+  run_evaluate_test(
+      "(do"
+      "     (var a 1)"
+      "     (loop true (do"
+      "         (if (ge a 10) (break))"
+      "         (set a (+ a 1))"
+      "     ))"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 10,
       });
 }
 
