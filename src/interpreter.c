@@ -162,7 +162,7 @@ EvaluateError evaluate_var(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_NO_SCOPE;
   }
 
-  if (env_contains(env, &token->value.list.data[1]->value.identifier)) {
+  if (env_contains_var(env, &token->value.list.data[1]->value.identifier)) {
     return EVALUATE_ERROR_DUPLICATE_IDENT;
   }
 
@@ -171,10 +171,15 @@ EvaluateError evaluate_var(Token* token, Env* env, Result* result) {
     return err;
   }
 
-  err = env_append(env, (Var){
-                            .name = token->value.list.data[1]->value.identifier,
-                            .result = *result,
-                        });
+  err = env_append(
+      env, (Symbol){
+               .type = SYMBOL_VAR,
+               .value.var =
+                   (Var){
+                       .name = token->value.list.data[1]->value.identifier,
+                       .result = *result,
+                   },
+           });
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
@@ -193,7 +198,8 @@ EvaluateError evaluate_set(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_NO_SCOPE;
   }
 
-  Var* to_modify = env_find(env, &token->value.list.data[1]->value.identifier);
+  Var* to_modify =
+      env_find_var(env, &token->value.list.data[1]->value.identifier);
   if (to_modify == NULL) {
     return EVALUATE_ERROR_VAR_NOT_FOUND;
   }
@@ -243,6 +249,91 @@ EvaluateError evaluate_loop(Token* token, Env* env, Result* result) {
   return EVALUATE_ERROR_NIL;
 }
 
+// Assumes the `TOKEN_LIST` variant is active and it has length of 4
+// Example: (def foo (arg1, arg2) body)
+EvaluateError evaluate_func(Token* token, Env* env, Result* result) {
+  assert(env != NULL);
+  assert(result != NULL);
+
+  Token* args = token->value.list.data[2];
+  if (args->type != TOKEN_LIST) {
+    return EVALUATE_ERROR_EXPECTED_LIST;
+  }
+
+  for (uint64_t i = 0; i < args->value.list.length; i++) {
+    Token* arg = args->value.list.data[i];
+    if (arg->type != TOKEN_IDENTIFIER) {
+      return EVALUATE_ERROR_EXPECTED_IDENT;
+    }
+  }
+
+  EvaluateError err = env_append(env, (Symbol){
+                                          .type = SYMBOL_FUNC,
+                                          .value.func = token,
+                                      });
+  if (err != EVALUATE_ERROR_NIL) {
+    return err;
+  }
+
+  return EVALUATE_ERROR_NIL;
+}
+
+// Assumes the `TOKEN_LIST` variant is active and it has length >= 2
+// Example: (call foo args1 arg2)
+// Example: (call foo)
+EvaluateError evaluate_call(Token* token, Env* env, Result* result) {
+  assert(env != NULL);
+  assert(result != NULL);
+
+  // Find the function
+  Token* to_call =
+      env_find_func(env, &token->value.list.data[1]->value.identifier);
+  if (to_call == NULL) {
+    return EVALUATE_ERROR_FUNC_NOT_FOUND;
+  }
+
+  // Initialize new scope
+  EvaluateError err;
+  Env* new_env = env_make(&err, env);
+  if (err != EVALUATE_ERROR_NIL) {
+    return err;
+  }
+
+  // Evaluate each argument and store its result
+  Token* params = to_call->value.list.data[2];
+  uint64_t params_length = params->value.list.length;
+  for (uint64_t i = 0; i < params_length; i++) {
+    Result arg_result;
+    Token* arg_to_eval = token->value.list.data[i + 2];
+    err = evaluate(arg_to_eval, new_env, &arg_result);
+    if (err != EVALUATE_ERROR_NIL) {
+      return err;
+    }
+
+    err = env_append(
+        new_env,
+        (Symbol){
+            .type = SYMBOL_VAR,
+            .value.var =
+                (Var){
+                    .name = params->value.list.data[i]->value.identifier,
+                    .result = arg_result,
+                },
+        });
+    if (err != EVALUATE_ERROR_NIL) {
+      return err;
+    }
+  }
+
+  // Evaluate the body
+  err = evaluate(to_call->value.list.data[3], new_env, result);
+  if (err != EVALUATE_ERROR_NIL) {
+    return err;
+  }
+
+  return EVALUATE_ERROR_NIL;
+}
+
 EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
   uint64_t length = token->value.list.length;
 
@@ -287,6 +378,16 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_BREAK;
   }
 
+  // Example: (def foo (arg1, arg2) body)
+  if (token->value.list.data[0]->type == TOKEN_DEF && length == 4) {
+    return evaluate_func(token, env, result);
+  }
+
+  // Example: (call foo args1 arg2)
+  if (token->value.list.data[0]->type == TOKEN_CALL && length >= 2) {
+    return evaluate_call(token, env, result);
+  }
+
   return EVALUATE_ERROR_NIL;
 }
 
@@ -322,7 +423,7 @@ EvaluateError evaluate(Token* token, Env* env, Result* result) {
       return evaluate_list(token, env, result);
     }
     case TOKEN_IDENTIFIER: {
-      Var* found = env_find(env, &token->value.identifier);
+      Var* found = env_find_var(env, &token->value.identifier);
       if (found == NULL) {
         return EVALUATE_ERROR_VAR_NOT_FOUND;
       }
@@ -362,9 +463,16 @@ bool rescmp(const Result* r1, const Result* r2) {
   }
 }
 
-bool varcmp(const Var* v1, const Var* v2) {
-  if (!fatstr_cmp(&v1->name, &v2->name)) return false;
-  if (!rescmp(&v1->result, &v2->result)) return false;
+bool varcmp(const Symbol* s1, const Symbol* s2) {
+  if (s1->type != s2->type) return false;
+
+  if (s1->type == SYMBOL_VAR) {
+    if (!fatstr_cmp(&s1->value.var.name, &s2->value.var.name)) return false;
+    if (!rescmp(&s1->value.var.result, &s2->value.var.result)) return false;
+  } else if (s1->type == SYMBOL_FUNC) {
+    if (s1->value.func != s2->value.func) return false;
+  }
+
   return true;
 }
 
@@ -378,7 +486,7 @@ Env* env_make(EvaluateError* err, Env* next) {
   env->capacity = 10;
   env->length = 0;
   env->next = next;
-  env->data = malloc(sizeof(Var) * env->capacity);
+  env->data = malloc(sizeof(Symbol) * env->capacity);
   if (env->data == NULL) {
     *err = EVALUATE_ERROR_MALLOC;
     return NULL;
@@ -389,12 +497,12 @@ Env* env_make(EvaluateError* err, Env* next) {
   return env;
 }
 
-EvaluateError env_append(Env* env, Var var) {
+EvaluateError env_append(Env* env, Symbol sym) {
   assert(env != NULL);
 
   // Request more memory if capacity is exceeded
   if (env->length >= env->capacity) {
-    Var* tmp = realloc(env->data, sizeof(Var) * 10);
+    Symbol* tmp = realloc(env->data, sizeof(Symbol) * 10);
     if (tmp == NULL) {
       return EVALUATE_ERROR_REALLOC;
     }
@@ -403,15 +511,16 @@ EvaluateError env_append(Env* env, Var var) {
   }
 
   // Append
-  env->data[env->length++] = var;
+  env->data[env->length++] = sym;
   return EVALUATE_ERROR_NIL;
 }
 
-bool env_contains(Env* env, FatStr* str) {
+bool env_contains_var(Env* env, FatStr* str) {
   if (env == NULL || str == NULL) return false;
 
   for (uint64_t i = 0; i < env->length; i++) {
-    if (fatstr_cmp(&env->data[i].name, str)) {
+    if (env->data[i].type == SYMBOL_VAR &&
+        fatstr_cmp(&env->data[i].value.var.name, str)) {
       return true;
     }
   }
@@ -419,17 +528,39 @@ bool env_contains(Env* env, FatStr* str) {
   return false;
 }
 
-Var* env_find(Env* env, FatStr* str) {
+Var* env_find_var(Env* env, FatStr* str) {
   if (env == NULL || str == NULL) return NULL;
 
   for (uint64_t i = 0; i < env->length; i++) {
-    if (fatstr_cmp(&env->data[i].name, str)) {
-      return env->data + i;
+    if (env->data[i].type == SYMBOL_VAR &&
+        fatstr_cmp(&env->data[i].value.var.name, str)) {
+      return &env->data[i].value.var;
     }
   }
 
+  // Go up a level
   if (env->next != NULL) {
-    return env_find(env->next, str);
+    return env_find_var(env->next, str);
+  }
+
+  return NULL;
+}
+
+Token* env_find_func(Env* env, FatStr* str) {
+  if (env == NULL || str == NULL) return NULL;
+
+  for (uint64_t i = 0; i < env->length; i++) {
+    if (env->data[i].type == SYMBOL_FUNC &&
+        fatstr_cmp(
+            &env->data[i].value.func->value.list.data[1]->value.identifier,
+            str)) {
+      return env->data[i].value.func;
+    }
+  }
+
+  // Go up a level
+  if (env->next != NULL) {
+    return env_find_func(env->next, str);
   }
 
   return NULL;

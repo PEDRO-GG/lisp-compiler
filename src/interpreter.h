@@ -28,8 +28,21 @@ typedef struct {
   Result result;
 } Var;
 
+typedef enum {
+  SYMBOL_VAR,
+  SYMBOL_FUNC,
+} SymbolType;
+
+typedef struct {
+  SymbolType type;
+  union {
+    Var var;
+    Token* func;
+  } value;
+} Symbol;
+
 typedef struct Env {
-  Var* data;
+  Symbol* data;
   uint64_t capacity;
   uint64_t length;
   struct Env* next;
@@ -47,8 +60,10 @@ typedef enum {
   EVALUATE_ERROR_NO_SCOPE,
   EVALUATE_ERROR_DUPLICATE_IDENT,
   EVALUATE_ERROR_EXPECTED_BOOL,
+  EVALUATE_ERROR_EXPECTED_LIST,
   EVALUATE_ERROR_BREAK,
   EVALUATE_ERROR_VAR_NOT_FOUND,
+  EVALUATE_ERROR_FUNC_NOT_FOUND,
   EVALUATE_ERROR_ILLEGAL_TOKEN,
   EVALUATE_ERROR_NIL,
 } EvaluateError;
@@ -57,8 +72,9 @@ EvaluateError evaluate(Token* token, Env* env, Result* result);
 bool rescmp(const Result* r1, const Result* r2);
 
 Env* env_make(EvaluateError* err, Env* next);
-EvaluateError env_append(Env* env, Var var);
-bool env_contains(Env* env, FatStr* str);
-Var* env_find(Env* env, FatStr* str);
+EvaluateError env_append(Env* env, Symbol sym);
+bool env_contains_var(Env* env, FatStr* str);
+Var* env_find_var(Env* env, FatStr* str);
+Token* env_find_func(Env* env, FatStr* str);
 
 #endif  // INTERPRETER_H

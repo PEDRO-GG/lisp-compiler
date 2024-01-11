@@ -54,30 +54,38 @@ void test_evaluate_arithmetic(void) {
 }
 
 void test_env_append(void) {
-  Var var1 = (Var){
-      .name =
-          (FatStr){
-              .start = (const uint8_t*)"a",
-              .length = 1,
-          },
-      .result =
-          (Result){
-              .type = RESULT_NUM,
-              .value.num = 1,
+  Symbol var1 = (Symbol){
+      .type = SYMBOL_VAR,
+      .value.var =
+          (Var){
+              .name =
+                  (FatStr){
+                      .start = (const uint8_t*)"a",
+                      .length = 1,
+                  },
+              .result =
+                  (Result){
+                      .type = RESULT_NUM,
+                      .value.num = 1,
+                  },
           },
   };
 
-  Var var2 = (Var){
-      .name =
-          (FatStr){
-              .start = (const uint8_t*)"b",
-              .length = 1,
-          },
-      .result =
-          (Result){
-              .type = RESULT_NUM,
-              .value.num = 2,
-          },
+  Symbol var2 = (Symbol){.type = SYMBOL_VAR,
+                         .value.var =
+                             (Var){
+                                 .name =
+                                     (FatStr){
+                                         .start = (const uint8_t*)"b",
+                                         .length = 1,
+                                     },
+                                 .result =
+                                     (Result){
+                                         .type = RESULT_NUM,
+                                         .value.num = 2,
+                                     },
+                             }
+
   };
 
   EvaluateError err;
@@ -371,6 +379,18 @@ void test_evaluate_loops(void) {
       });
 }
 
+void test_evaluate_functions(void) {
+  run_evaluate_test(
+      "(do"
+      "     (def successor (x) (+ x 1))"
+      "     (call successor 9)"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 10,
+      });
+}
+
 int main(void) {
   ADD_TEST(test_evaluate_num);
   ADD_TEST(test_evaluate_bool);
@@ -381,6 +401,7 @@ int main(void) {
   ADD_TEST(test_evaluate_binop);
   ADD_TEST(test_evaluate_if);
   ADD_TEST(test_evaluate_loops);
+  ADD_TEST(test_evaluate_functions);
   RUN_TESTS();
   return 0;
 }
