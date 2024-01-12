@@ -275,6 +275,8 @@ EvaluateError evaluate_func(Token* token, Env* env, Result* result) {
     return err;
   }
 
+  result->type = RESULT_NOOP;
+
   return EVALUATE_ERROR_NIL;
 }
 

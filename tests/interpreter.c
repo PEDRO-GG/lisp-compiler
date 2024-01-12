@@ -380,6 +380,27 @@ void test_evaluate_loops(void) {
 }
 
 void test_evaluate_functions(void) {
+  //   run_evaluate_test(
+  //       "(do "
+  //       "    (var a 1)"
+  //       "    (var b 2)"
+  //       "    (def sum (a b) (+ a b))"
+  //       "    (call sum b (call sum a b))"
+  //       ")",
+  //       &(Result){
+  //           .type = RESULT_NUM,
+  //           .value.num = 5,
+  //       });
+  run_evaluate_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (def sum (a b) (+ a b))"
+      ")",
+      &(Result){
+          .type = RESULT_NOOP,
+      });
+
   run_evaluate_test(
       "(do"
       "     (def successor (x) (+ x 1))"
