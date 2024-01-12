@@ -389,6 +389,20 @@ void test_evaluate_functions(void) {
           .type = RESULT_NUM,
           .value.num = 10,
       });
+  run_evaluate_test(
+      "(do"
+      "    (def fib (x)"
+      "        (if (le x 0)"
+      "            0"
+      "            (+ x (call fib (- x 1)))"
+      "        )"
+      "    )"
+      "    (call fib 5)"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 15,
+      });
 }
 
 int main(void) {
