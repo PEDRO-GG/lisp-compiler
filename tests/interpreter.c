@@ -391,6 +391,27 @@ void test_evaluate_functions(void) {
   //           .type = RESULT_NUM,
   //           .value.num = 5,
   //       });
+  //   run_evaluate_test(
+  //       "(do "
+  //       "    (var a 1)"
+  //       "    (var b 2)"
+  //       "    (def sum (a b) (+ a b))"  // Note that the params are the same
+  //       "    (call sum b a)"
+  //       ")",
+  //       &(Result){
+  //           .type = RESULT_NUM,
+  //           .value.num = 3,
+  //       });
+  run_evaluate_test(
+      "(do "
+      "    (var a 100)"
+      "    (def increment (a) (+ a 1))"
+      "    (call increment a)"
+      ")",
+      &(Result){
+          .type = RESULT_NUM,
+          .value.num = 101,
+      });
   run_evaluate_test(
       "(do "
       "    (var a 1)"
