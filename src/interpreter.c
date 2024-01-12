@@ -154,15 +154,16 @@ EvaluateError evaluate_if(Token* token, Env* env, Result* result) {
 // Assumes the `TOKEN_LIST` variant is active and it has length of 3
 // Example: (var a 1)
 EvaluateError evaluate_var(Token* token, Env* env, Result* result) {
-  if (token->value.list.data[1]->type != TOKEN_IDENTIFIER) {
-    return EVALUATE_ERROR_EXPECTED_IDENT;
-  }
-
   if (env == NULL) {
     return EVALUATE_ERROR_NO_SCOPE;
   }
 
-  if (env_contains_var(env, &token->value.list.data[1]->value.identifier)) {
+  Token* var_name = token->value.list.data[1];
+  if (var_name->type != TOKEN_IDENTIFIER) {
+    return EVALUATE_ERROR_EXPECTED_IDENT;
+  }
+
+  if (env_contains_var(env, &var_name->value.identifier)) {
     return EVALUATE_ERROR_DUPLICATE_IDENT;
   }
 
@@ -171,15 +172,14 @@ EvaluateError evaluate_var(Token* token, Env* env, Result* result) {
     return err;
   }
 
-  err = env_append(
-      env, (Symbol){
-               .type = SYMBOL_VAR,
-               .value.var =
-                   (Var){
-                       .name = token->value.list.data[1]->value.identifier,
-                       .result = *result,
-                   },
-           });
+  err = env_append(env, (Symbol){
+                            .type = SYMBOL_VAR,
+                            .value.var =
+                                (Var){
+                                    .name = var_name->value.identifier,
+                                    .result = *result,
+                                },
+                        });
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
