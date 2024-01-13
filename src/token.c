@@ -47,7 +47,7 @@ static const Keyword keywords[] = {
 
 static const size_t keywords_length = sizeof(keywords) / sizeof(keywords[0]);
 
-void token_to_string(Token* t, char* buffer) {
+void token_to_string(const Token* t, char* buffer) {
   assert(t != NULL);
   assert(buffer != NULL);
 
@@ -357,4 +357,10 @@ bool token_is_op(TokenType t) {
          t == TOKEN_DIV || t == TOKEN_EQ || t == TOKEN_NE || t == TOKEN_GE ||
          t == TOKEN_GT || t == TOKEN_LE || t == TOKEN_LT || t == TOKEN_AND ||
          t == TOKEN_OR;
+}
+
+void print_token(const Token* t) {
+  char buffer[200] = {0};
+  token_to_string(t, buffer);
+  printf("%s", buffer);
 }

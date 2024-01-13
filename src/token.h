@@ -84,7 +84,8 @@ Token* token_list_init(TokenError* err, int total, ...);
 TokenError token_list_append(Token* list, Token* token);
 
 bool tkncmp(const Token* t1, const Token* t2);
-void token_to_string(Token* t, char* buffer);
+void token_to_string(const Token* t, char* buffer);
+void print_token(const Token* t);
 bool is_op(char c);
 bool token_is_op(TokenType t);
 Token* parse(const char* input, uint64_t* idx, TokenError* err);
