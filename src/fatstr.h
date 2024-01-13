@@ -10,5 +10,6 @@ typedef struct FatStr {
 } FatStr;
 
 bool fatstr_cmp(const FatStr* f1, const FatStr* f2);
+bool fatstr_to_str(const FatStr* f, char* buffer);
 
 #endif  // FATSTR_H

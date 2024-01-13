@@ -9,3 +9,9 @@ bool fatstr_cmp(const FatStr* f1, const FatStr* f2) {
 
   return true;
 }
+
+bool fatstr_to_str(const FatStr* f, char* buffer) {
+  if (buffer == NULL) return false;
+  strncat(buffer, (char*)f->start, f->length);
+  return true;
+}
