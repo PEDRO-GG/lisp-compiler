@@ -120,3 +120,21 @@ void test_strcmp(const char* raw_left, const char* raw_right, const char* left,
         file_name, line_num, raw_left, raw_right, left, right);
   }
 }
+
+void test_eq_ptr(const char* raw_left, const char* raw_right, void* left,
+                 void* right, const char* file_name, int line_num) {
+  if (left != right) {
+    populate_fail_msg(
+        "%s:%d: assertion failed: %s != %s\n      left: %d\n      right: %d",
+        file_name, line_num, raw_left, raw_right, left, right);
+  }
+}
+
+void test_not_eq_ptr(const char* raw_left, const char* raw_right, void* left,
+                     void* right, const char* file_name, int line_num) {
+  if (left == right) {
+    populate_fail_msg(
+        "%s:%d: assertion failed: %s != %s\n      left: %d\n      right: %d",
+        file_name, line_num, raw_left, raw_right, left, right);
+  }
+}

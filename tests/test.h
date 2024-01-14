@@ -52,4 +52,20 @@ void test_strcmp(const char* raw_left, const char* raw_right, const char* left,
     test_strcmp(#left, #right, left, right, __FILE__, __LINE__); \
   } while (0)
 
+void test_eq_ptr(const char* raw_left, const char* raw_right, void* left,
+                 void* right, const char* file_name, int line_num);
+
+#define TEST_EQ_PTR(left, right)                                 \
+  do {                                                           \
+    test_eq_ptr(#left, #right, left, right, __FILE__, __LINE__); \
+  } while (0)
+
+void test_not_eq_ptr(const char* raw_left, const char* raw_right, void* left,
+                     void* right, const char* file_name, int line_num);
+
+#define TEST_NOT_EQ_PTR(left, right)                                 \
+  do {                                                               \
+    test_not_eq_ptr(#left, #right, left, right, __FILE__, __LINE__); \
+  } while (0)
+
 #endif  // TEST_H
