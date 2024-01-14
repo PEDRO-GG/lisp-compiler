@@ -567,3 +567,33 @@ Token* env_find_func(Env* env, FatStr* str) {
 
   return NULL;
 }
+
+bool result_to_string(const Result* r, char* buffer) {
+  switch (r->type) {
+    case RESULT_NUM: {
+      char num[100];
+      sprintf(num, "%lld", r->value.num);
+      strcat(buffer, num);
+      break;
+    }
+    case RESULT_BOOL: {
+      if (r->value.boolean) {
+        strcat(buffer, "true");
+      } else {
+        strcat(buffer, "false");
+      }
+      break;
+    }
+    case RESULT_STRING: {
+      return fatstr_to_str(&r->value.string, buffer);
+    }
+    case RESULT_NOOP: {
+      strcat(buffer, "NOOP");
+      break;
+    }
+    default:
+      return false;
+  }
+
+  return true;
+}

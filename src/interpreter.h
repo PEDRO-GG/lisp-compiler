@@ -70,6 +70,7 @@ typedef enum {
 
 EvaluateError evaluate(Token* token, Env* env, Result* result);
 bool rescmp(const Result* r1, const Result* r2);
+bool result_to_string(const Result* r, char* buffer);
 
 Env* env_make(EvaluateError* err, Env* next);
 EvaluateError env_append(Env* env, Symbol sym);
