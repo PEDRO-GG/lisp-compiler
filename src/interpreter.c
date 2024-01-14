@@ -253,27 +253,29 @@ EvaluateError evaluate_loop(Token* token, Env* env, Result* result) {
 }
 
 // Assumes the `TOKEN_LIST` variant is active and it has length of 4
-// Example: (def foo (arg1, arg2) body)
+// Example: (def foo (param1, param2) body)
 EvaluateError evaluate_func(Token* token, Env* env, Result* result) {
   assert(env != NULL);
   assert(result != NULL);
 
-  Token* args = token->value.list.data[2];
-  if (args->type != TOKEN_LIST) {
+  Token* params = token->value.list.data[2];
+  if (params->type != TOKEN_LIST) {
     return EVALUATE_ERROR_EXPECTED_LIST;
   }
 
-  for (uint64_t i = 0; i < args->value.list.length; i++) {
-    Token* arg = args->value.list.data[i];
-    if (arg->type != TOKEN_IDENTIFIER) {
+  for (uint64_t i = 0; i < params->value.list.length; i++) {
+    Token* param = params->value.list.data[i];
+    if (param->type != TOKEN_IDENTIFIER) {
       return EVALUATE_ERROR_EXPECTED_IDENT;
     }
   }
 
-  EvaluateError err = env_append(env, (Symbol){
-                                          .type = SYMBOL_FUNC,
-                                          .value.func = token,
-                                      });
+  EvaluateError err = env_append(
+      env,
+      (Symbol){
+          .type = SYMBOL_FUNC,
+          .value.func = token,  // store the function name, params, and body
+      });
   if (err != EVALUATE_ERROR_NIL) {
     return err;
   }
@@ -297,7 +299,7 @@ EvaluateError evaluate_call(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_FUNC_NOT_FOUND;
   }
 
-  // Initialize new scope
+  // Initialize new scope for function body
   EvaluateError err;
   Env* new_env = env_make(&err, env);
   if (err != EVALUATE_ERROR_NIL) {
@@ -309,22 +311,22 @@ EvaluateError evaluate_call(Token* token, Env* env, Result* result) {
   uint64_t params_length = params->value.list.length;
   for (uint64_t i = 0; i < params_length; i++) {
     Result arg_result;
-    Token* arg_to_eval = token->value.list.data[i + 2];
+    Token* arg_to_eval =
+        token->value.list.data[i + 2];  // skip "def" and function name
     err = evaluate(arg_to_eval, env, &arg_result);
     if (err != EVALUATE_ERROR_NIL) {
       return err;
     }
 
-    err = env_append(
-        new_env,
-        (Symbol){
-            .type = SYMBOL_VAR,
-            .value.var =
-                (Var){
-                    .name = params->value.list.data[i]->value.identifier,
-                    .result = arg_result,
-                },
-        });
+    FatStr param_name = params->value.list.data[i]->value.identifier;
+    err = env_append(new_env, (Symbol){
+                                  .type = SYMBOL_VAR,
+                                  .value.var =
+                                      (Var){
+                                          .name = param_name,
+                                          .result = arg_result,
+                                      },
+                              });
     if (err != EVALUATE_ERROR_NIL) {
       return err;
     }
@@ -383,7 +385,7 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
     return EVALUATE_ERROR_BREAK;
   }
 
-  // Example: (def foo (arg1, arg2) body)
+  // Example: (def foo (param1, param2) body)
   if (token->value.list.data[0]->type == TOKEN_DEF && length == 4) {
     return evaluate_func(token, env, result);
   }
