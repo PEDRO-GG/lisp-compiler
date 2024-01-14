@@ -1,6 +1,7 @@
 #include "fatstr.h"
 
 #include "stdlib.h"
+#include "strings.h"
 
 bool fatstr_cmp(const FatStr* f1, const FatStr* f2) {
   if (f1->length != f2->length) return false;
