@@ -36,6 +36,14 @@ void test_eq(const char* raw_left, const char* raw_right, int left, int right,
     test_eq(#left, #right, left, right, __FILE__, __LINE__); \
   } while (0)
 
+void test_not_eq(const char* raw_left, const char* raw_right, int left,
+                 int right, const char* file_name, int line_num);
+
+#define TEST_NOT_EQ(left, right)                                 \
+  do {                                                           \
+    test_not_eq(#left, #right, left, right, __FILE__, __LINE__); \
+  } while (0)
+
 void test_strcmp(const char* raw_left, const char* raw_right, const char* left,
                  const char* right, const char* file_name, int line_num);
 
