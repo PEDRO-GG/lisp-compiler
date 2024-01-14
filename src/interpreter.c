@@ -1,8 +1,11 @@
 #include "interpreter.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+
+#define DEBUG 0  // Enable or disable debug prints
 
 // Assumes the `TOKEN_LIST` variant is active and it has length of 3
 // Example: (+ 1 2)
@@ -307,7 +310,7 @@ EvaluateError evaluate_call(Token* token, Env* env, Result* result) {
   for (uint64_t i = 0; i < params_length; i++) {
     Result arg_result;
     Token* arg_to_eval = token->value.list.data[i + 2];
-    err = evaluate(arg_to_eval, new_env, &arg_result);
+    err = evaluate(arg_to_eval, env, &arg_result);
     if (err != EVALUATE_ERROR_NIL) {
       return err;
     }
@@ -395,6 +398,15 @@ EvaluateError evaluate_list(Token* token, Env* env, Result* result) {
 
 EvaluateError evaluate(Token* token, Env* env, Result* result) {
   assert(result != NULL);
+
+#if DEBUG
+  printf("\nevaluate(");
+  print_token(token);
+  printf(", ");
+  print_env(env);
+  printf(")");
+  printf("\n");
+#endif
 
   if (token == NULL) {
     return EVALUATE_ERROR_NULL_TOKEN;
@@ -566,6 +578,40 @@ Token* env_find_func(Env* env, FatStr* str) {
   }
 
   return NULL;
+}
+
+void env_to_string(Env* env, char* buffer) {
+  if (env == NULL) {
+    strcat(buffer, "NULL");
+    return;
+  }
+
+  strcat(buffer, "({");
+  for (uint64_t i = 0; i < env->length; i++) {
+    Symbol curr = env->data[i];
+    if (curr.type == SYMBOL_FUNC) {
+      fatstr_to_str(&curr.value.func->value.list.data[1]->value.identifier,
+                    buffer);
+      strcat(buffer, ": ()=>{}");
+    } else {
+      strcat(buffer, "'");
+      fatstr_to_str(&curr.value.var.name, buffer);
+      strcat(buffer, "': ");
+      result_to_string(&curr.value.var.result, buffer);
+    }
+    if (i != env->length - 1) {
+      strcat(buffer, ", ");
+    }
+  }
+  strcat(buffer, "}, ");
+  env_to_string(env->next, buffer);
+  strcat(buffer, ")\0");
+}
+
+void print_env(Env* env) {
+  char buffer[1024] = {0};
+  env_to_string(env, buffer);
+  printf("%s", buffer);
 }
 
 bool result_to_string(const Result* r, char* buffer) {

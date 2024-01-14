@@ -77,5 +77,7 @@ EvaluateError env_append(Env* env, Symbol sym);
 bool env_contains_var(Env* env, FatStr* str);
 Var* env_find_var(Env* env, FatStr* str);
 Token* env_find_func(Env* env, FatStr* str);
+void print_env(Env* env);
+void env_to_string(Env* env, char* buffer);
 
 #endif  // INTERPRETER_H
