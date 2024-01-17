@@ -45,12 +45,12 @@ void errors_append(Errors* errs, Error err) {
   errs->data[errs->length++] = err;
 
   // Check for unrecoverable errors
-  if (err.type == ERROR_MALLOC || err.type == ERROR_REALLOC ||
-      err.type == ERROR_EMPTY_PROGRAM) {
-    fprintf(stderr, "errors_append(): unrecoverable error encountered");
-    errors_print(errs);
-    exit(EXIT_FAILURE);
-  }
+  // if (err.type == ERROR_MALLOC || err.type == ERROR_REALLOC ||
+  //     err.type == ERROR_EMPTY_PROGRAM) {
+  //   fprintf(stderr, "errors_append(): unrecoverable error encountered");
+  //   errors_print(errs);
+  //   exit(EXIT_FAILURE);
+  // }
 }
 
 void errors_print(Errors* errs) {
