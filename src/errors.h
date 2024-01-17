@@ -42,6 +42,7 @@ typedef struct {
 } Errors;
 
 Errors* errors_init(void);
-bool errors_append(Errors* errs, Error err);
+void errors_append(Errors* errs, Error err);
+void errors_print(Errors* errs);
 
 #endif  // ERRORS_H
