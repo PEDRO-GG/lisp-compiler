@@ -1,16 +1,17 @@
 #include "../src/token.c"
 
+#include "../src/errors.c"
 #include "test.h"
 
 void run_parse_test(const char* input, const Token* expected_tkn,
                     const char* expected_str) {
-  TokenError err;
   uint64_t idx = 0;
-  Token* tkn = parse(input, &idx, &err);
+  Errors* errs = errors_init();
+  Token* tkn = parse(input, &idx, errs);
   char buffer[500] = {0};  // TODO: Change to dynamic memory allocation
   token_to_string(tkn, buffer);
 
-  TEST_EQ(err, TOKEN_ERROR_NIL);
+  TEST_EQ(errs->length, 0);
   if (expected_tkn) {
     TEST_EQ(tkncmp(tkn, expected_tkn), true);
   }
@@ -27,87 +28,105 @@ void test_parse_num(void) {
 }
 
 void test_parse_list_with_one_element(void) {
-  TokenError err;
+  Errors* errs = errors_init();
   Token* list;
 
-  list = token_list_make(&err);
-  TKN_PANIC(err);
+  list = token_list_make(errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list, &(Token){
-                                    .type = TOKEN_NUM,
-                                    .value.num = 123,
-                                });
-  TKN_PANIC(err);
+  token_list_append(list,
+                    &(Token){
+                        .type = TOKEN_NUM,
+                        .value.num = 123,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
   run_parse_test("  (  123  )  ", list, "(123)");
 }
 
 void test_parse_list_with_two_elements(void) {
-  TokenError err;
+  Errors* errs = errors_init();
   Token* list;
 
-  list = token_list_make(&err);
-  TKN_PANIC(err);
+  list = token_list_make(errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list, &(Token){
-                                    .type = TOKEN_NUM,
-                                    .value.num = 123,
-                                });
-  TKN_PANIC(err);
+  token_list_append(list,
+                    &(Token){
+                        .type = TOKEN_NUM,
+                        .value.num = 123,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list, &(Token){
-                                    .type = TOKEN_NUM,
-                                    .value.num = 4,
-                                });
-  TKN_PANIC(err);
+  token_list_append(list,
+                    &(Token){
+                        .type = TOKEN_NUM,
+                        .value.num = 4,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
   run_parse_test("  (123 4) ", list, "(123 4)");
 }
 
 void test_parse_arithmetic(void) {
-  TokenError err;
+  Errors* errs = errors_init();
   Token* list1;
   Token* list2;
 
-  list1 = token_list_make(&err);
-  TKN_PANIC(err);
+  list1 = token_list_make(errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list1, &(Token){
-                                     .type = TOKEN_ADD,
-                                 });
-  TKN_PANIC(err);
+  token_list_append(list1,
+                    &(Token){
+                        .type = TOKEN_ADD,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list1, &(Token){
-                                     .type = TOKEN_NUM,
-                                     .value.num = 1,
-                                 });
-  TKN_PANIC(err);
+  token_list_append(list1,
+                    &(Token){
+                        .type = TOKEN_NUM,
+                        .value.num = 1,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list1, &(Token){
-                                     .type = TOKEN_NUM,
-                                     .value.num = 2,
-                                 });
-  TKN_PANIC(err);
+  token_list_append(list1,
+                    &(Token){
+                        .type = TOKEN_NUM,
+                        .value.num = 2,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
-  list2 = token_list_make(&err);
-  TKN_PANIC(err);
+  list2 = token_list_make(errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list2, &(Token){
-                                     .type = TOKEN_MINUS,
-                                 });
-  TKN_PANIC(err);
+  token_list_append(list2,
+                    &(Token){
+                        .type = TOKEN_MINUS,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list2, &(Token){
-                                     .type = TOKEN_NUM,
-                                     .value.num = 1,
-                                 });
-  TKN_PANIC(err);
+  token_list_append(list2,
+                    &(Token){
+                        .type = TOKEN_NUM,
+                        .value.num = 1,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
-  err = token_list_append(list2, &(Token){
-                                     .type = TOKEN_NUM,
-                                     .value.num = 2,
-                                 });
-  TKN_PANIC(err);
+  token_list_append(list2,
+                    &(Token){
+                        .type = TOKEN_NUM,
+                        .value.num = 2,
+                    },
+                    errs);
+  TEST_EQ(errs->length, 0);
 
   run_parse_test(" (   + 1 2   ) ", list1, "(+ 1 2)");
   run_parse_test(" (  - 1 2   ) ", list2, "(- 1 2)");
@@ -152,47 +171,51 @@ void test_parse_string(void) {
 }
 
 void test_parse_ternary(void) {
-  TokenError err;
+  Errors* errs = errors_init();
   Token* list1;
   Token* list2;
 
-  list2 = token_list_make(&err);
-  TKN_PANIC(err);
+  list2 = token_list_make(errs);
+  TEST_EQ(errs->length, 0);
 
-  APPEND_TOKEN_AND_CHECK(list2, ((Token){.type = TOKEN_LT}));
-  APPEND_TOKEN_AND_CHECK(list2, ((Token){.type = TOKEN_NUM, .value.num = 1}));
-  APPEND_TOKEN_AND_CHECK(list2, ((Token){.type = TOKEN_NUM, .value.num = 2}));
+  token_list_append(list2, &(Token){.type = TOKEN_LT}, errs);
+  token_list_append(list2, &(Token){.type = TOKEN_NUM, .value.num = 1}, errs);
+  token_list_append(list2, &(Token){.type = TOKEN_NUM, .value.num = 2}, errs);
 
-  list1 = token_list_make(&err);
-  TKN_PANIC(err);
+  list1 = token_list_make(errs);
+  TEST_EQ(errs->length, 0);
 
-  APPEND_TOKEN_AND_CHECK(list1, ((Token){.type = TOKEN_TERNARY}));
-  APPEND_TOKEN_AND_CHECK(list1, (*list2));
-  APPEND_TOKEN_AND_CHECK(list1, ((Token){
-                                    .type = TOKEN_STRING,
-                                    .value.string =
-                                        (FatStr){
-                                            .start = (const uint8_t*)"\"yes\"",
-                                            .length = 5,
-                                        },
-                                }));
-  APPEND_TOKEN_AND_CHECK(list1, ((Token){
-                                    .type = TOKEN_STRING,
-                                    .value.string =
-                                        (FatStr){
-                                            .start = (const uint8_t*)"\"no\"",
-                                            .length = 4,
-                                        },
-                                }));
+  token_list_append(list1, &(Token){.type = TOKEN_TERNARY}, errs);
+  token_list_append(list1, list2, errs);
+  token_list_append(list1,
+                    &(Token){
+                        .type = TOKEN_STRING,
+                        .value.string =
+                            (FatStr){
+                                .start = (const uint8_t*)"\"yes\"",
+                                .length = 5,
+                            },
+                    },
+                    errs);
+  token_list_append(list1,
+                    &(Token){
+                        .type = TOKEN_STRING,
+                        .value.string =
+                            (FatStr){
+                                .start = (const uint8_t*)"\"no\"",
+                                .length = 4,
+                            },
+                    },
+                    errs);
 
   run_parse_test("(  ? (lt 1 2) \"yes\"   \"no\")", list1,
                  "(? (lt 1 2) \"yes\" \"no\")");
 }
 
 void test_parse_var(void) {
-  TokenError err;
+  Errors* errs = errors_init();
   run_parse_test("(var x y)",
-                 token_list_init(&err, 3,
+                 token_list_init(errs, 3,
                                  &(Token){
                                      .type = TOKEN_VAR,
                                  },
@@ -213,10 +236,10 @@ void test_parse_var(void) {
                                          },
                                  }),
                  "(var x y)");
-  TKN_PANIC(err);
+  TEST_EQ(errs->length, 0);
 
   run_parse_test("(var prin      bre)",
-                 token_list_init(&err, 3,
+                 token_list_init(errs, 3,
                                  &(Token){
                                      .type = TOKEN_VAR,
                                  },
@@ -254,13 +277,13 @@ void test_parse_do(void) {
   char* expected_str =
       "(do (var x 1) (var y 2) (do (var x (+ y 3)) (set y (+ x 4))) (+ x y))";
 
-  TokenError err;
+  Errors* errs = errors_init();
   Token* main = token_list_init(
-      &err, 5,
+      errs, 5,
       &(Token){
           .type = TOKEN_DO,
       },
-      token_list_init(&err, 3,
+      token_list_init(errs, 3,
                       &(Token){
                           .type = TOKEN_VAR,
                       },
@@ -276,7 +299,7 @@ void test_parse_do(void) {
                           .type = TOKEN_NUM,
                           .value.num = 1,
                       }),
-      token_list_init(&err, 3,
+      token_list_init(errs, 3,
                       &(Token){
                           .type = TOKEN_VAR,
                       },
@@ -293,11 +316,11 @@ void test_parse_do(void) {
                           .value.num = 2,
                       }),
       token_list_init(
-          &err, 3,
+          errs, 3,
           &(Token){
               .type = TOKEN_DO,
           },
-          token_list_init(&err, 3,
+          token_list_init(errs, 3,
                           &(Token){
                               .type = TOKEN_VAR,
                           },
@@ -309,7 +332,7 @@ void test_parse_do(void) {
                                       .length = 1,
                                   },
                           },
-                          token_list_init(&err, 3,
+                          token_list_init(errs, 3,
                                           &(Token){
                                               .type = TOKEN_ADD,
                                           },
@@ -325,7 +348,7 @@ void test_parse_do(void) {
                                               .type = TOKEN_NUM,
                                               .value.num = 3,
                                           })),
-          token_list_init(&err, 3,
+          token_list_init(errs, 3,
                           &(Token){
                               .type = TOKEN_SET,
                           },
@@ -337,7 +360,7 @@ void test_parse_do(void) {
                                       .length = 1,
                                   },
                           },
-                          token_list_init(&err, 3,
+                          token_list_init(errs, 3,
                                           &(Token){
                                               .type = TOKEN_ADD,
                                           },
@@ -353,7 +376,7 @@ void test_parse_do(void) {
                                               .type = TOKEN_NUM,
                                               .value.num = 4,
                                           }))),
-      token_list_init(&err, 3,
+      token_list_init(errs, 3,
                       &(Token){
                           .type = TOKEN_ADD,
                       },
@@ -373,7 +396,7 @@ void test_parse_do(void) {
                                   .length = 1,
                               },
                       }));
-  TKN_PANIC(err);
+  TEST_EQ(errs->length, 0);
 
   run_parse_test(input, main, expected_str);
 }

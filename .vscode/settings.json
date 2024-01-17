@@ -55,6 +55,8 @@
         "cctype": "c",
         "test.h": "c",
         "sstream": "c",
-        "strings.h": "c"
+        "strings.h": "c",
+        "token.h": "c",
+        "errors.h": "c"
     }
 }

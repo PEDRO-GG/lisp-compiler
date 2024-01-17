@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "errors.h"
 #include "fatstr.h"
 
 typedef enum {
@@ -49,16 +50,6 @@ typedef enum {
   TOKEN_COUNT,
 } TokenType;
 
-typedef enum {
-  TOKEN_ERROR_MALLOC,
-  TOKEN_ERROR_REALLOC,
-  TOKEN_ERROR_APPEND,
-  TOKEN_ERROR_UNBALANCED_PARENS,
-  TOKEN_ERROR_EXPECTED_LPAREN,
-  TOKEN_ERROR_EMPTY_PROGRAM,
-  TOKEN_ERROR_NIL,
-} TokenError;
-
 typedef struct Tokens {
   struct Token** data;
   uint64_t capacity;
@@ -79,28 +70,15 @@ typedef struct Token {
 #define LENGTH(x) ((x)->value.list.length)
 #define DATA(x) ((x)->value.list.data)
 
-Token* token_list_make(TokenError* err);
-Token* token_list_init(TokenError* err, int total, ...);
-TokenError token_list_append(Token* list, Token* token);
+Token* token_list_make(Errors* errs);
+Token* token_list_init(Errors* errs, int total, ...);
+void token_list_append(Token* list, Token* token, Errors* errs);
 
 bool tkncmp(const Token* t1, const Token* t2);
 void token_to_string(const Token* t, char* buffer);
 void print_token(const Token* t);
 bool is_op(char c);
 bool token_is_op(TokenType t);
-Token* parse(const char* input, uint64_t* idx, TokenError* err);
-
-#define TKN_PANIC(err)            \
-  do {                            \
-    if (err != TOKEN_ERROR_NIL) { \
-      exit(EXIT_FAILURE);         \
-    }                             \
-  } while (0)
-
-#define APPEND_TOKEN_AND_CHECK(list, token_expr)  \
-  do {                                            \
-    err = token_list_append(list, &(token_expr)); \
-    TKN_PANIC(err);                               \
-  } while (0)
+Token* parse(const char* input, uint64_t* idx, Errors* errs);
 
 #endif  // TOKEN_H

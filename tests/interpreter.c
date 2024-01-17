@@ -1,19 +1,20 @@
 #include "../src/interpreter.c"
 
+#include "../src/errors.c"
 #include "../src/fatstr.c"
 #include "../src/token.c"
 #include "test.h"
 
 void run_evaluate_test(const char* input, const Result* expected_result) {
-  TokenError err1;
+  Errors* errs = errors_init();
   EvaluateError err2;
   uint64_t idx;
   Token* tkn;
   Result result;
 
   idx = 0;
-  tkn = parse(input, &idx, &err1);
-  TEST_EQ(err1, TOKEN_ERROR_NIL);
+  tkn = parse(input, &idx, errs);
+  TEST_EQ(errs->length, 0);
 
   err2 = evaluate(tkn, NULL, &result);
   TEST_EQ(err2, EVALUATE_ERROR_NIL);
