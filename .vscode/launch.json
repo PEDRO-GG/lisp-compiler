@@ -10,8 +10,8 @@
             "name": "Debug",
             // "program": "${workspaceFolder}/bin/main",
             // "program": "${workspaceFolder}/bin/build",
-            // "program": "${workspaceFolder}/bin/tests/token",
-            "program": "${workspaceFolder}/bin/tests/interpreter",
+            "program": "${workspaceFolder}/bin/tests/token",
+            // "program": "${workspaceFolder}/bin/tests/interpreter",
             // "args": ["test", "-A"],
             "cwd": "${workspaceFolder}"
         }

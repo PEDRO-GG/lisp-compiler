@@ -5,9 +5,9 @@
 
 void run_parse_test(const char* input, const Token* expected_tkn,
                     const char* expected_str) {
-  uint64_t idx = 0;
   Errors* errs = errors_init();
-  Token* tkn = parse(input, &idx, errs);
+  Parser parser = new_parser(input);
+  Token* tkn = parse(&parser, errs);
   char buffer[500] = {0};  // TODO: Change to dynamic memory allocation
   token_to_string(tkn, buffer);
 
@@ -433,6 +433,14 @@ void test_parse_loop(void) {
       "(if (gt (+ a b) 10) (break)))) (* a b))");
 }
 
+void test_parse_errors(void) {
+  Errors* errs = errors_init();
+  Parser parser = new_parser("(var a 1");
+  Token* tkn = parse(&parser, errs);
+  TEST_EQ(errs->length, 1);
+  TEST_EQ_PTR(tkn, NULL);
+}
+
 int main(void) {
   ADD_TEST(test_parse_num);
   ADD_TEST(test_parse_list_with_one_element);
@@ -444,6 +452,7 @@ int main(void) {
   ADD_TEST(test_parse_do);
   ADD_TEST(test_parse_func);
   ADD_TEST(test_parse_loop);
+  ADD_TEST(test_parse_errors);
   RUN_TESTS();
   return 0;
 }

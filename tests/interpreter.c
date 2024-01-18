@@ -8,12 +8,11 @@
 void run_evaluate_test(const char* input, const Result* expected_result) {
   Errors* errs = errors_init();
   EvaluateError err2;
-  uint64_t idx;
   Token* tkn;
   Result result;
 
-  idx = 0;
-  tkn = parse(input, &idx, errs);
+  Parser parser = new_parser(input);
+  tkn = parse(&parser, errs);
   TEST_EQ(errs->length, 0);
 
   err2 = evaluate(tkn, NULL, &result);

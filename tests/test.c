@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#define ADDEND 10
+#define DEFAULT_CAPACITY 10
 #define MAX_MSGS 30
 #define MAX_MSG_LENGTH 500  // TODO: Change to use dynamic memory allocation
 
@@ -20,21 +20,22 @@ static char fail_msgs[MAX_MSGS][MAX_MSG_LENGTH] = {0};
 void add_test(Test t) {
   // Check if this is the very first test
   if (tests == NULL) {
-    tests = malloc(sizeof(Test) * ADDEND);
+    tests = malloc(sizeof(Test) * DEFAULT_CAPACITY);
     if (tests == NULL) {
       perror("Error allocating memory");
       exit(EXIT_FAILURE);
     }
-    capacity = ADDEND;
+    capacity = DEFAULT_CAPACITY;
   } else if (length >= capacity) {
     // Request more memory if needed
-    Test* tmp = realloc(tests, sizeof(Test) * ADDEND);
+    uint64_t new_cap = (capacity + DEFAULT_CAPACITY);
+    Test* tmp = realloc(tests, sizeof(Test) * new_cap);
     if (tmp == NULL) {
       perror("Error allocating memory");
       exit(EXIT_FAILURE);
     }
     tests = tmp;
-    capacity += ADDEND;
+    capacity = new_cap;
   }
 
   tests[length++] = t;
