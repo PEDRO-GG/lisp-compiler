@@ -43,6 +43,7 @@ typedef struct {
 
 Errors* errors_init(void);
 void errors_append(Errors* errs, Error err);
+void errors_append_fatal(Errors* errs, Error err);
 void errors_print(Errors* errs);
 
 #endif  // ERRORS_H

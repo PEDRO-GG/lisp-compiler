@@ -72,3 +72,10 @@ void errors_print(Errors* errs) {
     }
   }
 }
+
+void errors_append_fatal(Errors* errs, Error err) {
+  errors_append(errs, err);
+  fprintf(stderr, "unrecoverable error encountered");
+  errors_print(errs);
+  exit(EXIT_FAILURE);
+}
