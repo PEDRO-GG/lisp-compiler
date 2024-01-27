@@ -151,6 +151,7 @@ void run_all_tests(void) {
 
   // Every test depends on tests/test.c
   compile(TESTS_DIR "test.c", OBJ_TESTS_DIR "test.o");
+  printf("\n");
 
   // Compile each test
   struct dirent *entry;
