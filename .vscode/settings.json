@@ -57,6 +57,7 @@
         "sstream": "c",
         "strings.h": "c",
         "token.h": "c",
-        "errors.h": "c"
+        "errors.h": "c",
+        "compiler.h": "c"
     }
 }
