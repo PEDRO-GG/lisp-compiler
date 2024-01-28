@@ -64,6 +64,17 @@ int array_append(Array* array, void* element) {
   return 0;  // Success
 }
 
+// Function to get an element
+void* array_get(Array* array, size_t index) {
+  if (array == NULL || index >= array->length) {
+    return NULL;  // Error: Invalid input or index out of bounds
+  }
+
+  // Calculate the address of the desired element
+  char* element = (char*)array->data + (index * array->element_size);
+  return (void*)element;
+}
+
 // Function to remove an element from the array
 int array_remove(Array* array, size_t index) {
   if (array == NULL || index >= array->length) {
