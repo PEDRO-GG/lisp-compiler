@@ -177,6 +177,64 @@ void test_array(void) {
   TEST_EQ((*x_ptr), 24);
   TEST_EQ((*y_ptr), 25);
   TEST_EQ_PTR(z_ptr, NULL);
+
+  array_truncate(array, 5);  // Remove everything from idx 5 and onwards
+  TEST_EQ(array->length, 5);
+  TEST_EQ(array->capacity, 40);
+
+  a_ptr = array_get(array, 0);
+  b_ptr = array_get(array, 1);
+  c_ptr = array_get(array, 2);
+  d_ptr = array_get(array, 3);
+  e_ptr = array_get(array, 4);
+  f_ptr = array_get(array, 5);
+  g_ptr = array_get(array, 6);
+  h_ptr = array_get(array, 7);
+  i_ptr = array_get(array, 8);
+  j_ptr = array_get(array, 9);
+  k_ptr = array_get(array, 10);
+  l_ptr = array_get(array, 11);
+  m_ptr = array_get(array, 12);
+  n_ptr = array_get(array, 13);
+  o_ptr = array_get(array, 14);
+  p_ptr = array_get(array, 15);
+  q_ptr = array_get(array, 16);
+  r_ptr = array_get(array, 17);
+  s_ptr = array_get(array, 18);
+  t_ptr = array_get(array, 19);
+  u_ptr = array_get(array, 20);
+  v_ptr = array_get(array, 21);
+  w_ptr = array_get(array, 22);
+  x_ptr = array_get(array, 23);
+  y_ptr = array_get(array, 24);
+  z_ptr = array_get(array, 25);  // Out of bounds
+
+  TEST_EQ((*a_ptr), 0);
+  TEST_EQ((*b_ptr), 1);
+  TEST_EQ((*c_ptr), 2);
+  TEST_EQ((*d_ptr), 4);
+  TEST_EQ((*e_ptr), 5);
+  TEST_EQ_PTR(f_ptr, NULL);
+  TEST_EQ_PTR(g_ptr, NULL);
+  TEST_EQ_PTR(h_ptr, NULL);
+  TEST_EQ_PTR(i_ptr, NULL);
+  TEST_EQ_PTR(j_ptr, NULL);
+  TEST_EQ_PTR(k_ptr, NULL);
+  TEST_EQ_PTR(l_ptr, NULL);
+  TEST_EQ_PTR(m_ptr, NULL);
+  TEST_EQ_PTR(n_ptr, NULL);
+  TEST_EQ_PTR(o_ptr, NULL);
+  TEST_EQ_PTR(p_ptr, NULL);
+  TEST_EQ_PTR(q_ptr, NULL);
+  TEST_EQ_PTR(r_ptr, NULL);
+  TEST_EQ_PTR(s_ptr, NULL);
+  TEST_EQ_PTR(t_ptr, NULL);
+  TEST_EQ_PTR(u_ptr, NULL);
+  TEST_EQ_PTR(v_ptr, NULL);
+  TEST_EQ_PTR(w_ptr, NULL);
+  TEST_EQ_PTR(x_ptr, NULL);
+  TEST_EQ_PTR(y_ptr, NULL);
+  TEST_EQ_PTR(z_ptr, NULL);
 }
 
 int main(void) {
