@@ -98,6 +98,18 @@ int array_remove(Array* array, size_t index) {
   return 0;  // Success
 }
 
+// Pops an element
+void* array_pop(Array* array) {
+  if (array == NULL || array->length == 0) {
+    return NULL;  // Error: Invalid input or array is empty
+  }
+
+  // Calculate the address of the last element
+  array->length--;
+  char* element = (char*)array->data + (array->length * array->element_size);
+  return (void*)element;
+}
+
 // Function to remove all elements from the nth index onwards
 int array_truncate(Array* array, size_t n) {
   if (array == NULL) {

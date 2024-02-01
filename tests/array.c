@@ -235,6 +235,11 @@ void test_array(void) {
   TEST_EQ_PTR(x_ptr, NULL);
   TEST_EQ_PTR(y_ptr, NULL);
   TEST_EQ_PTR(z_ptr, NULL);
+
+  int* popped = array_pop(array);
+  TEST_EQ(array->length, 4);
+  TEST_EQ(array->capacity, 40);
+  TEST_EQ((*popped), 5);
 }
 
 int main(void) {
