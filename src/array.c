@@ -122,3 +122,6 @@ int array_truncate(Array* array, size_t n) {
 
   return 0;  // Success
 }
+
+// Returns the length
+size_t array_length(Array* array) { return array->length; }

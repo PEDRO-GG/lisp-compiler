@@ -238,6 +238,7 @@ void test_array(void) {
 
   int* popped = array_pop(array);
   TEST_EQ(array->length, 4);
+  TEST_EQ(array_length(array), 4);
   TEST_EQ(array->capacity, 40);
   TEST_EQ((*popped), 5);
 }

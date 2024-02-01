@@ -12,5 +12,6 @@ void* array_get(Array* array, size_t index);
 int array_remove(Array* array, size_t index);
 void* array_pop(Array* array);
 int array_truncate(Array* array, size_t n);
+size_t array_length(Array* array);
 
 #endif  // ARRAY_H
