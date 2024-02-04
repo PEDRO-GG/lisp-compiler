@@ -244,8 +244,33 @@ void test_array(void) {
   TEST_EQ((*popped), 5);
 }
 
+void test_char_array(void) {
+  Array* array = array_new(3, sizeof(char));
+  array_append_str(array, "abcdefg");
+
+  char* a = (char*)array_get(array, 0);
+  char* b = (char*)array_get(array, 1);
+  char* c = (char*)array_get(array, 2);
+  char* d = (char*)array_get(array, 3);
+  char* e = (char*)array_get(array, 4);
+  char* f = (char*)array_get(array, 5);
+  char* g = (char*)array_get(array, 6);
+
+  TEST_EQ(array->length, 7);
+  TEST_EQ(array->capacity, 12);
+
+  TEST_EQ((*a), 'a');
+  TEST_EQ((*b), 'b');
+  TEST_EQ((*c), 'c');
+  TEST_EQ((*d), 'd');
+  TEST_EQ((*e), 'e');
+  TEST_EQ((*f), 'f');
+  TEST_EQ((*g), 'g');
+}
+
 int main(void) {
   ADD_TEST(test_array);
+  ADD_TEST(test_char_array);
   RUN_TESTS();
   return 0;
 }

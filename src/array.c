@@ -125,3 +125,19 @@ int array_truncate(Array* array, size_t n) {
 
 // Returns the length
 size_t array_length(Array* array) { return array->length; }
+
+// Function to append a string to the array (without null terminator)
+int array_append_str(Array* array, const char* str) {
+  if (array == NULL || str == NULL) {
+    return -1;  // Error: Invalid input
+  }
+
+  // Append each character of the string to the array
+  for (size_t i = 0; str[i] != '\0'; ++i) {
+    if (array_append(array, (void*)&str[i]) != 0) {
+      return -1;  // Error: Failed to append character
+    }
+  }
+
+  return 0;  // Success
+}
