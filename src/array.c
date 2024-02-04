@@ -1,5 +1,6 @@
 #include "array.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -140,4 +141,63 @@ int array_append_str(Array* array, const char* str) {
   }
 
   return 0;  // Success
+}
+
+// Function to append a formatted string to the array
+int array_append_fmt(Array* array, const char* format, ...) {
+  if (array == NULL || format == NULL) {
+    return -1;  // Error: Invalid input
+  }
+
+  // Start variadic arguments
+  va_list args;
+  va_start(args, format);
+
+  // Determine the length of the formatted string
+  int length = vsnprintf(NULL, 0, format, args);
+  if (length < 0) {
+    va_end(args);
+    return -1;  // Error: Formatting failed
+  }
+
+  // Allocate a temporary buffer for the formatted string
+  char* buffer = (char*)malloc(length + 1);  // +1 for null terminator
+  if (buffer == NULL) {
+    va_end(args);
+    return -1;  // Error: Memory allocation failed
+  }
+
+  // Actually format the string
+  vsnprintf(buffer, length + 1, format, args);
+
+  // Append the formatted string to the array (excluding the null terminator)
+  for (int i = 0; i < length; ++i) {
+    if (array_append(array, &buffer[i]) != 0) {
+      free(buffer);
+      va_end(args);
+      return -1;  // Error: Failed to append character
+    }
+  }
+
+  // Clean up
+  free(buffer);
+  va_end(args);
+
+  return 0;  // Success
+}
+
+// Function to compare array content with a string
+bool array_compare_with_string(Array* array, const char* str) {
+  if (array->length != strlen(str)) {
+    return false;  // Length mismatch
+  }
+
+  for (size_t i = 0; i < array->length; ++i) {
+    char* array_char = (char*)array_get(array, i);
+    if (*array_char != str[i]) {
+      return false;  // Character mismatch
+    }
+  }
+
+  return true;  // Match
 }

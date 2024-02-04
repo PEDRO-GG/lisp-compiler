@@ -268,9 +268,17 @@ void test_char_array(void) {
   TEST_EQ((*g), 'g');
 }
 
+void test_char_array_fmt(void) {
+  Array* array = array_new(10, sizeof(char));
+  array_append_fmt(array, "The numbers are: %d, %d, and %d", 1, 2, 3);
+  bool res = array_compare_with_string(array, "The numbers are: 1, 2, and 3");
+  TEST_EQ(res, true);
+}
+
 int main(void) {
   ADD_TEST(test_array);
   ADD_TEST(test_char_array);
+  ADD_TEST(test_char_array_fmt);
   RUN_TESTS();
   return 0;
 }

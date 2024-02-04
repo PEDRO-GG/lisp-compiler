@@ -58,6 +58,7 @@
         "strings.h": "c",
         "token.h": "c",
         "errors.h": "c",
-        "compiler.h": "c"
+        "compiler.h": "c",
+        "array.h": "c"
     }
 }
