@@ -6,9 +6,8 @@
 #include "test.h"
 
 void test_num(void) {
-  Array* errs = array_new(10, sizeof(Error));
   Parser parser = new_parser("10");
-  Token* tkn = parse(&parser, errs);
+  Token* tkn = parse(&parser);
   Compiler cs = new_compiler(tkn);
   compile(&cs);
   bool res = array_compare_with_string(cs.code, "const 10 0");

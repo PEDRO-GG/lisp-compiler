@@ -277,22 +277,22 @@ Token* parse_value(Parser* parser, Array* errs) {
   return parse_chars(parser, errs);
 }
 
-Token* parse(Parser* parser, Array* errs) {
+Token* parse(Parser* parser) {
   assert(parser != NULL);
-  assert(errs != NULL);
+  assert(parser->errs != NULL);
 
   char c = skip_space(parser);
   if (c == '(') {
     c = read_char(parser);
 
-    Token* parent_list = token_list_make(errs);
+    Token* parent_list = token_list_make(parser->errs);
     while (true) {
       c = skip_space(parser);
 
       if (c == '\0') {
-        array_append(errs, &(Error){
-                               .type = ERROR_UNBALANCED_PARENS,
-                           });
+        array_append(parser->errs, &(Error){
+                                       .type = ERROR_UNBALANCED_PARENS,
+                                   });
         return NULL;
       }
 
@@ -301,23 +301,23 @@ Token* parse(Parser* parser, Array* errs) {
         break;
       }
 
-      Token* child = parse(parser, errs);
-      token_list_append(parent_list, child, errs);
+      Token* child = parse(parser);
+      token_list_append(parent_list, child, parser->errs);
     }
     return parent_list;
   } else if (c == ')') {
-    array_append(errs, &(Error){
-                           .type = ERROR_UNBALANCED_PARENS,
-                       });
+    array_append(parser->errs, &(Error){
+                                   .type = ERROR_UNBALANCED_PARENS,
+                               });
     return NULL;
   } else if (c == '\0') {
-    array_append(errs, &(Error){
-                           .type = ERROR_EMPTY_PROGRAM,
-                       });
+    array_append(parser->errs, &(Error){
+                                   .type = ERROR_EMPTY_PROGRAM,
+                               });
     return NULL;
   }
 
-  return parse_value(parser, errs);
+  return parse_value(parser, parser->errs);
 }
 
 bool tkncmp(const Token* t1, const Token* t2) {
@@ -377,6 +377,7 @@ Parser new_parser(const char* input) {
       .col = 1,
       .row = 1,
       .idx = 0,
+      .errs = array_new(10, sizeof(Error)),
   };
 }
 char get_curr_char(Parser* parser) { return parser->input[parser->idx]; }

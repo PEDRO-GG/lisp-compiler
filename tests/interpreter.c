@@ -7,14 +7,13 @@
 #include "test.h"
 
 void run_evaluate_test(const char* input, const Result* expected_result) {
-  Array* errs = array_new(10, sizeof(Error));
   EvaluateError err2;
   Token* tkn;
   Result result;
 
   Parser parser = new_parser(input);
-  tkn = parse(&parser, errs);
-  TEST_EQ(errs->length, 0);
+  tkn = parse(&parser);
+  TEST_EQ(array_length(parser.errs), 0);
 
   err2 = evaluate(tkn, NULL, &result);
   TEST_EQ(err2, EVALUATE_ERROR_NIL);

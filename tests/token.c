@@ -6,13 +6,12 @@
 
 void run_parse_test(const char* input, const Token* expected_tkn,
                     const char* expected_str) {
-  Array* errs = array_new(10, sizeof(Error));
   Parser parser = new_parser(input);
-  Token* tkn = parse(&parser, errs);
+  Token* tkn = parse(&parser);
   char buffer[500] = {0};  // TODO: Change to dynamic memory allocation
   token_to_string(tkn, buffer);
 
-  TEST_EQ(errs->length, 0);
+  TEST_EQ(array_length(parser.errs), 0);
   if (expected_tkn) {
     TEST_EQ(tkncmp(tkn, expected_tkn), true);
   }
@@ -435,10 +434,9 @@ void test_parse_loop(void) {
 }
 
 void test_parse_errors(void) {
-  Array* errs = array_new(10, sizeof(Error));
   Parser parser = new_parser("(var a 1");
-  Token* tkn = parse(&parser, errs);
-  TEST_EQ(errs->length, 1);
+  Token* tkn = parse(&parser);
+  TEST_EQ(array_length(parser.errs), 1);
   TEST_EQ_PTR(tkn, NULL);
 }
 

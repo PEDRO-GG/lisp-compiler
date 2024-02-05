@@ -72,6 +72,7 @@ typedef struct {
   uint64_t col;
   uint64_t row;
   const char* input;
+  Array* errs;
 } Parser;
 
 #define CAPACITY(x) ((x)->value.list.capacity)
@@ -87,7 +88,7 @@ void token_to_string(const Token* t, char* buffer);
 void print_token(const Token* t);
 bool is_op(char c);
 bool token_is_op(TokenType t);
-Token* parse(Parser* parser, Array* errs);
+Token* parse(Parser* parser);
 Parser new_parser(const char* input);
 char read_char(Parser* parser);
 char get_curr_char(Parser* parser);
