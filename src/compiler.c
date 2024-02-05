@@ -1,27 +1,48 @@
 #include "compiler.h"
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
-void compile_do(CompilerState* cs, Token* token) {
-  enter_scope(cs);
+// void compile_do(Compiler* cs, Token* token) {
+//   enter_scope(cs);
 
-  for (uint64_t i = 1; i < token->value.list.length; i++) {
-    compile(cs, token->value.list.data[i]);
-  }
+//   for (uint64_t i = 1; i < token->value.list.length; i++) {
+//     compile(cs, token->value.list.data[i]);
+//   }
 
-  leave_scope(cs);
+//   leave_scope(cs);
+// }
+
+// void compile_list(Compiler* cs, Token* token) {
+//   uint64_t length = token->value.list.length;
+
+//   // Example: (var a 1)
+//   if (token->value.list.data[0]->type == TOKEN_VAR && length == 3) {
+//     return evaluate_var(token, env, result);
+//   }
+
+//   // Example: (do ...)
+//   if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
+//     compile_do(cs, token);
+//   }
+// }
+
+Compiler new_compiler(Token* token) {
+  Compiler compiler = (Compiler){
+      .idents = array_new(10, sizeof(Identifier)),
+      .scopes = array_new(10, sizeof(uint64_t)),
+      .code = array_new(10, sizeof(char)),
+      .errs = errors_init(),
+      .token = token,
+      .stack = 0,
+  };
+
+  return compiler;
 }
 
-void compile_list(CompilerState* cs, Token* token) {
-  uint64_t length = token->value.list.length;
-
-  // Example: (do ...)
-  if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
-    compile_do(cs, token);
-  }
-}
-
-void compile(CompilerState* cs, Token* token) {
+void compile(Compiler* cs) {
+  Token* token = cs->token;
   if (token == NULL) {
     errors_append_fatal(cs->errs, (Error){
                                       .type = ERROR_EMPTY_PROGRAM,
@@ -29,8 +50,13 @@ void compile(CompilerState* cs, Token* token) {
   }
 
   switch (token->type) {
-    case TOKEN_LIST: {
-      compile_list(cs, token);
+    // case TOKEN_LIST: {
+    //   compile_list(cs);
+    //   break;
+    // }
+    case TOKEN_NUM: {
+      array_append_fmt(cs->code, "const %lld %lld", token->value.num,
+                       cs->stack++);
       break;
     }
 
@@ -39,35 +65,16 @@ void compile(CompilerState* cs, Token* token) {
   }
 }
 
-void enter_scope(CompilerState* cs) {
-  Scope* new_scope = malloc(sizeof(Scope));
-  if (new_scope == NULL) {
+void enter_scope(Compiler* cs) {
+  size_t length = array_length(cs->idents);
+  if (array_append(cs->scopes, &length) != 0) {
     errors_append_fatal(cs->errs, (Error){
                                       .type = ERROR_MALLOC,
                                   });
-    return;
   }
-
-  new_scope->parent = cs->scope;
-  new_scope->capacity = 10;
-  new_scope->length = 0;
-
-  new_scope->locals = malloc(sizeof(Local) * new_scope->capacity);
-  if (new_scope->locals == NULL) {
-    errors_append_fatal(cs->errs, (Error){
-                                      .type = ERROR_MALLOC,
-                                  });
-    return;
-  }
-
-  return;
 }
 
-void leave_scope(CompilerState* cs) {
-  Scope* parent = cs->scope->parent;
-
-  free(cs->scope->locals);
-  free(cs->scope);
-
-  cs->scope = parent;
+void leave_scope(Compiler* cs) {
+  size_t* current_scope = (size_t*)array_pop(cs->scopes);
+  array_truncate(cs->idents, *current_scope);
 }

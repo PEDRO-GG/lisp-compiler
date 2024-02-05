@@ -11,7 +11,8 @@
             // "program": "${workspaceFolder}/bin/main",
             // "program": "${workspaceFolder}/bin/build",
             // "program": "${workspaceFolder}/bin/tests/token",
-            "program": "${workspaceFolder}/bin/tests/array",
+            // "program": "${workspaceFolder}/bin/tests/array",
+            "program": "${workspaceFolder}/bin/tests/compiler",
             // "program": "${workspaceFolder}/bin/tests/interpreter",
             // "args": ["test", "-A"],
             "cwd": "${workspaceFolder}"

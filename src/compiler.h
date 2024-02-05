@@ -2,36 +2,35 @@
 #define COMPILER_H
 #include <stdint.h>
 
+#include "array.h"
 #include "errors.h"
 #include "fatstr.h"
 #include "token.h"
 
 typedef enum {
-  LOCAL_BOOL,
-  LOCAL_INT,
-  LOCAL_STR,
-  LOCAL_VOID,
-} LocalType;
+  TYPE_INT,
+  TYPE_FUNC,
+  TYPE_BYTE,
+  TYPE_BYTE_PTR,
+} ValueType;
 
 typedef struct {
   FatStr name;
-  LocalType type;
-} Local;
-
-typedef struct Scope {
-  struct Scope* parent;  // the parent scope
-  uint64_t length;       // number of local variables seen
-  uint64_t capacity;     // number of locals allocated
-  Local* locals;         // array of locals
-} Scope;
+  ValueType type;
+} Identifier;
 
 typedef struct {
-  Scope* scope;  // the very first scope
-  Errors* errs;  // compiler errors
-} CompilerState;
+  Array* idents;   // array of identifiers
+  Array* scopes;   // array of indices from idents
+  Array* code;     // array of chars
+  Errors* errs;    // compiler errors
+  Token* token;    // token to compile
+  uint64_t stack;  // number of variables on the stack
+} Compiler;
 
-void compile(CompilerState* cs, Token* token);
-void enter_scope(CompilerState* cs);
-void leave_scope(CompilerState* cs);
+Compiler new_compiler(Token* token);
+void compile(Compiler* cs);
+void enter_scope(Compiler* cs);
+void leave_scope(Compiler* cs);
 
 #endif  // COMPILER_H
