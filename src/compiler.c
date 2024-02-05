@@ -33,7 +33,7 @@ Compiler new_compiler(Token* token) {
       .idents = array_new(10, sizeof(Identifier)),
       .scopes = array_new(10, sizeof(uint64_t)),
       .code = array_new(10, sizeof(char)),
-      .errs = errors_init(),
+      .errs = array_new(10, sizeof(Error)),
       .token = token,
       .stack = 0,
   };
@@ -44,9 +44,9 @@ Compiler new_compiler(Token* token) {
 void compile(Compiler* cs) {
   Token* token = cs->token;
   if (token == NULL) {
-    errors_append_fatal(cs->errs, (Error){
-                                      .type = ERROR_EMPTY_PROGRAM,
-                                  });
+    array_append(cs->errs, &(Error){
+                               .type = ERROR_EMPTY_PROGRAM,
+                           });
   }
 
   switch (token->type) {
@@ -68,9 +68,9 @@ void compile(Compiler* cs) {
 void enter_scope(Compiler* cs) {
   size_t length = array_length(cs->idents);
   if (array_append(cs->scopes, &length) != 0) {
-    errors_append_fatal(cs->errs, (Error){
-                                      .type = ERROR_MALLOC,
-                                  });
+    array_append(cs->errs, &(Error){
+                               .type = ERROR_MALLOC,
+                           });
   }
 }
 

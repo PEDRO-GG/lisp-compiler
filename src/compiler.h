@@ -23,7 +23,7 @@ typedef struct {
   Array* idents;   // array of identifiers
   Array* scopes;   // array of indices from idents
   Array* code;     // array of chars
-  Errors* errs;    // compiler errors
+  Array* errs;     // array of errors
   Token* token;    // token to compile
   uint64_t stack;  // number of variables on the stack
 } Compiler;

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "array.h"
 #include "errors.h"
 #include "fatstr.h"
 
@@ -77,16 +78,16 @@ typedef struct {
 #define LENGTH(x) ((x)->value.list.length)
 #define DATA(x) ((x)->value.list.data)
 
-Token* token_list_make(Errors* errs);
-Token* token_list_init(Errors* errs, int total, ...);
-void token_list_append(Token* list, Token* token, Errors* errs);
+Token* token_list_make(Array* errs);
+Token* token_list_init(Array* errs, int total, ...);
+void token_list_append(Token* list, Token* token, Array* errs);
 
 bool tkncmp(const Token* t1, const Token* t2);
 void token_to_string(const Token* t, char* buffer);
 void print_token(const Token* t);
 bool is_op(char c);
 bool token_is_op(TokenType t);
-Token* parse(Parser* parser, Errors* errs);
+Token* parse(Parser* parser, Array* errs);
 Parser new_parser(const char* input);
 char read_char(Parser* parser);
 char get_curr_char(Parser* parser);

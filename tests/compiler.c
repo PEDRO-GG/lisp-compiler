@@ -6,7 +6,7 @@
 #include "test.h"
 
 void test_num(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Parser parser = new_parser("10");
   Token* tkn = parse(&parser, errs);
   Compiler cs = new_compiler(tkn);

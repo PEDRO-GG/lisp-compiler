@@ -103,21 +103,21 @@ void token_to_string(const Token* t, char* buffer) {
   }
 }
 
-Token* token_list_make(Errors* errs) {
+Token* token_list_make(Array* errs) {
   Token* tkn = malloc(sizeof(Token));
   if (tkn == NULL) {
-    errors_append(errs, (Error){
-                            .type = ERROR_MALLOC,
-                        });
+    array_append(errs, &(Error){
+                           .type = ERROR_MALLOC,
+                       });
     return NULL;
   }
 
   uint64_t capacity = 10;
   Token** data = malloc(sizeof(Token*) * capacity);
   if (data == NULL) {
-    errors_append(errs, (Error){
-                            .type = ERROR_MALLOC,
-                        });
+    array_append(errs, &(Error){
+                           .type = ERROR_MALLOC,
+                       });
     return NULL;
   }
 
@@ -131,7 +131,7 @@ Token* token_list_make(Errors* errs) {
   return tkn;
 }
 
-void token_list_append(Token* list, Token* token, Errors* errs) {
+void token_list_append(Token* list, Token* token, Array* errs) {
   assert(list != NULL);
   assert(list->type == TOKEN_LIST);
 
@@ -140,9 +140,9 @@ void token_list_append(Token* list, Token* token, Errors* errs) {
     uint64_t increase = 10;
     struct Token** tmp = realloc(DATA(list), sizeof(struct Token) * increase);
     if (tmp == NULL) {
-      errors_append(errs, (Error){
-                              .type = ERROR_REALLOC,
-                          });
+      array_append(errs, &(Error){
+                             .type = ERROR_REALLOC,
+                         });
     }
     DATA(list) = tmp;
     CAPACITY(list) = CAPACITY(list) + increase;
@@ -152,7 +152,7 @@ void token_list_append(Token* list, Token* token, Errors* errs) {
   list->value.list.data[LENGTH(list)++] = token;
 }
 
-Token* token_list_init(Errors* errs, int total, ...) {
+Token* token_list_init(Array* errs, int total, ...) {
   Token* list = token_list_make(errs);
   if (list == NULL) {
     return NULL;
@@ -179,7 +179,7 @@ char skip_space(Parser* parser) {
   return c;
 }
 
-Token* parse_num(Parser* parser, Errors* errs) {
+Token* parse_num(Parser* parser, Array* errs) {
   int64_t num = 0;
   char c = get_curr_char(parser);
   while (isdigit(c)) {
@@ -190,9 +190,9 @@ Token* parse_num(Parser* parser, Errors* errs) {
 
   Token* tkn = malloc(sizeof(Token));
   if (tkn == NULL) {
-    errors_append(errs, (Error){
-                            .type = ERROR_MALLOC,
-                        });
+    array_append(errs, &(Error){
+                           .type = ERROR_MALLOC,
+                       });
     return NULL;
   }
 
@@ -202,7 +202,7 @@ Token* parse_num(Parser* parser, Errors* errs) {
   return tkn;
 }
 
-Token* parse_chars(Parser* parser, Errors* errs) {
+Token* parse_chars(Parser* parser, Array* errs) {
   uint64_t length = 0;
   const char* start = get_curr_ptr(parser);
   char c = get_curr_char(parser);
@@ -213,9 +213,9 @@ Token* parse_chars(Parser* parser, Errors* errs) {
 
   Token* tkn = malloc(sizeof(Token));
   if (tkn == NULL) {
-    errors_append(errs, (Error){
-                            .type = ERROR_MALLOC,
-                        });
+    array_append(errs, &(Error){
+                           .type = ERROR_MALLOC,
+                       });
     return NULL;
   }
 
@@ -239,7 +239,7 @@ Token* parse_chars(Parser* parser, Errors* errs) {
   return tkn;
 }
 
-Token* parse_string(Parser* parser, Errors* errs) {
+Token* parse_string(Parser* parser, Array* errs) {
   const char* start = get_curr_ptr(parser);
   uint64_t length = 1;
   char c = read_char(parser);
@@ -252,9 +252,9 @@ Token* parse_string(Parser* parser, Errors* errs) {
 
   Token* tkn = malloc(sizeof(Token));
   if (tkn == NULL) {
-    errors_append(errs, (Error){
-                            .type = ERROR_MALLOC,
-                        });
+    array_append(errs, &(Error){
+                           .type = ERROR_MALLOC,
+                       });
     return NULL;
   }
 
@@ -267,7 +267,7 @@ Token* parse_string(Parser* parser, Errors* errs) {
   return tkn;
 }
 
-Token* parse_value(Parser* parser, Errors* errs) {
+Token* parse_value(Parser* parser, Array* errs) {
   char c = get_curr_char(parser);
   if (isdigit(c)) {
     return parse_num(parser, errs);
@@ -277,7 +277,7 @@ Token* parse_value(Parser* parser, Errors* errs) {
   return parse_chars(parser, errs);
 }
 
-Token* parse(Parser* parser, Errors* errs) {
+Token* parse(Parser* parser, Array* errs) {
   assert(parser != NULL);
   assert(errs != NULL);
 
@@ -290,9 +290,9 @@ Token* parse(Parser* parser, Errors* errs) {
       c = skip_space(parser);
 
       if (c == '\0') {
-        errors_append(errs, (Error){
-                                .type = ERROR_UNBALANCED_PARENS,
-                            });
+        array_append(errs, &(Error){
+                               .type = ERROR_UNBALANCED_PARENS,
+                           });
         return NULL;
       }
 
@@ -306,14 +306,14 @@ Token* parse(Parser* parser, Errors* errs) {
     }
     return parent_list;
   } else if (c == ')') {
-    errors_append(errs, (Error){
-                            .type = ERROR_UNBALANCED_PARENS,
-                        });
+    array_append(errs, &(Error){
+                           .type = ERROR_UNBALANCED_PARENS,
+                       });
     return NULL;
   } else if (c == '\0') {
-    errors_append(errs, (Error){
-                            .type = ERROR_EMPTY_PROGRAM,
-                        });
+    array_append(errs, &(Error){
+                           .type = ERROR_EMPTY_PROGRAM,
+                       });
     return NULL;
   }
 

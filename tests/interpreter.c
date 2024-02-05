@@ -1,12 +1,13 @@
 #include "../src/interpreter.c"
 
+#include "../src/array.c"
 #include "../src/errors.c"
 #include "../src/fatstr.c"
 #include "../src/token.c"
 #include "test.h"
 
 void run_evaluate_test(const char* input, const Result* expected_result) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   EvaluateError err2;
   Token* tkn;
   Result result;

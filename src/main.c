@@ -4,7 +4,7 @@
 #include "token.h"
 
 int main(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   const char* input = "  (  123  )  ";
   Parser parser = new_parser(input);
   Token* tkn = parse(&parser, errs);

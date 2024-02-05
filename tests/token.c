@@ -1,11 +1,12 @@
 #include "../src/token.c"
 
+#include "../src/array.c"
 #include "../src/errors.c"
 #include "test.h"
 
 void run_parse_test(const char* input, const Token* expected_tkn,
                     const char* expected_str) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Parser parser = new_parser(input);
   Token* tkn = parse(&parser, errs);
   char buffer[500] = {0};  // TODO: Change to dynamic memory allocation
@@ -28,7 +29,7 @@ void test_parse_num(void) {
 }
 
 void test_parse_list_with_one_element(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Token* list;
 
   list = token_list_make(errs);
@@ -46,7 +47,7 @@ void test_parse_list_with_one_element(void) {
 }
 
 void test_parse_list_with_two_elements(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Token* list;
 
   list = token_list_make(errs);
@@ -72,7 +73,7 @@ void test_parse_list_with_two_elements(void) {
 }
 
 void test_parse_arithmetic(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Token* list1;
   Token* list2;
 
@@ -171,7 +172,7 @@ void test_parse_string(void) {
 }
 
 void test_parse_ternary(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Token* list1;
   Token* list2;
 
@@ -213,7 +214,7 @@ void test_parse_ternary(void) {
 }
 
 void test_parse_var(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   run_parse_test("(var x y)",
                  token_list_init(errs, 3,
                                  &(Token){
@@ -277,7 +278,7 @@ void test_parse_do(void) {
   char* expected_str =
       "(do (var x 1) (var y 2) (do (var x (+ y 3)) (set y (+ x 4))) (+ x y))";
 
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Token* main = token_list_init(
       errs, 5,
       &(Token){
@@ -434,7 +435,7 @@ void test_parse_loop(void) {
 }
 
 void test_parse_errors(void) {
-  Errors* errs = errors_init();
+  Array* errs = array_new(10, sizeof(Error));
   Parser parser = new_parser("(var a 1");
   Token* tkn = parse(&parser, errs);
   TEST_EQ(errs->length, 1);

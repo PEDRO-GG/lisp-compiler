@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "array.h"
+
 typedef enum {
   // Generic Errors
   ERROR_MALLOC,
@@ -35,15 +37,6 @@ typedef struct {
   uint64_t code_end;
 } Error;
 
-typedef struct {
-  Error* data;
-  uint64_t capacity;
-  uint64_t length;
-} Errors;
-
-Errors* errors_init(void);
-void errors_append(Errors* errs, Error err);
-void errors_append_fatal(Errors* errs, Error err);
-void errors_print(Errors* errs);
+void errors_print(Array* errs);
 
 #endif  // ERRORS_H
