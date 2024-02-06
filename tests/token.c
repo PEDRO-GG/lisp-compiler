@@ -453,5 +453,5 @@ int main(void) {
   ADD_TEST(test_parse_loop);
   ADD_TEST(test_parse_errors);
   RUN_TESTS();
-  return 0;
+  return exit_code();
 }

@@ -280,5 +280,5 @@ int main(void) {
   ADD_TEST(test_char_array);
   ADD_TEST(test_char_array_fmt);
   RUN_TESTS();
-  return 0;
+  return exit_code();
 }

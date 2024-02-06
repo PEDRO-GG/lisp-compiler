@@ -70,7 +70,7 @@ void run_cmd(char *const *cmd) {
   } else if (pid == 0) {
     // Child process
     print_cmd(cmd);
-    execvp(CC, cmd);
+    execvp(cmd[0], cmd);
 
     // If execvp returns, an error occurred
     perror("failed to compile");
@@ -178,7 +178,12 @@ void run_all_tests(void) {
       char *cmd[] = {
           CC, out_file, OBJ_TESTS_DIR "test.o", "-o", bin_file, NULL,
       };
-      run_cmd(cmd);
+      char *exe[] = {
+          bin_file,
+          NULL,
+      };
+      run_cmd(cmd);  // Run compiler
+      run_cmd(exe);  // Run executable
       printf("\n");
     }
   }

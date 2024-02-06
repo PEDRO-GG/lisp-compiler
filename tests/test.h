@@ -28,6 +28,8 @@ void run_tests(const char* file_name);
     run_tests(__FILE__); \
   } while (0)
 
+int exit_code(void);
+
 void test_eq(const char* raw_left, const char* raw_right, int left, int right,
              const char* file_name, int line_num);
 

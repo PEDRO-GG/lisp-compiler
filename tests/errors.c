@@ -61,5 +61,5 @@ void test_error_append(void) {
 int main(void) {
   ADD_TEST(test_error_append);
   RUN_TESTS();
-  return 0;
+  return exit_code();
 }

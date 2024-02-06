@@ -22,5 +22,5 @@ void test_num(void) {
 int main(void) {
   ADD_TEST(test_num);
   RUN_TESTS();
-  return 0;
+  return exit_code();
 }

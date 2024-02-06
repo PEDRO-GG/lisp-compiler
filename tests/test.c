@@ -17,6 +17,8 @@ static Test* tests = NULL;
 static uint64_t idx = 0;
 static char fail_msgs[MAX_MSGS][MAX_MSG_LENGTH] = {0};
 
+static int EXIT_CODE = 0;
+
 void add_test(Test t) {
   // Check if this is the very first test
   if (tests == NULL) {
@@ -84,6 +86,7 @@ void run_tests(const char* file_name) {
     printf("    [%llu/%llu] %s ... ", i + 1, length, t.name);
     t.func();
     if (fail_msgs[0][0] != '\0') {
+      EXIT_CODE = -1;
       printf("FAIL\n");
       print_fail_msgs();
       reset_fail_msgs();
@@ -93,6 +96,8 @@ void run_tests(const char* file_name) {
     }
   }
 }
+
+int exit_code(void) { return EXIT_CODE; }
 
 void test_eq(const char* raw_left, const char* raw_right, int left, int right,
              const char* file_name, int line_num) {

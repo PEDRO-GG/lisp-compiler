@@ -472,5 +472,5 @@ int main(void) {
   ADD_TEST(test_evaluate_loops);
   ADD_TEST(test_evaluate_functions);
   RUN_TESTS();
-  return 0;
+  return exit_code();
 }
