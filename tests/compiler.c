@@ -18,6 +18,7 @@ void test_num(void) {
   run_compiler_test("10", "const 10 0");
   run_compiler_test("-10", "const -10 0");
   run_compiler_test("1000", "const 1000 0");
+  run_compiler_test("---1000", "const -1000 0");
 }
 
 int main(void) {
