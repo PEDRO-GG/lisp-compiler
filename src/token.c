@@ -280,7 +280,8 @@ Token* parse_value(Parser* parser, Array* errs) {
       operand *= -1;
       c = read_char(parser);
     }
-    Token* num = parse_num(parser, errs);
+    Token* num =
+        parse_num(parser, errs);  // TODO: call `parse` instead for expressions
     num->value.num *= operand;
     return num;
   }
