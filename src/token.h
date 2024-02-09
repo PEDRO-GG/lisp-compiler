@@ -92,6 +92,7 @@ Token* parse(Parser* parser);
 Parser new_parser(const char* input);
 char read_char(Parser* parser);
 char get_curr_char(Parser* parser);
+char peek_char(Parser* parser);
 const char* get_curr_ptr(Parser* parser);
 
 #endif  // TOKEN_H

@@ -273,6 +273,16 @@ Token* parse_value(Parser* parser, Array* errs) {
     return parse_num(parser, errs);
   } else if (c == '\"') {
     return parse_string(parser, errs);
+  } else if (c == '-' && peek_char(parser) != ' ') {
+    int operand = -1;
+    c = read_char(parser);
+    while (c == '-') {
+      operand *= -1;
+      c = read_char(parser);
+    }
+    Token* num = parse_num(parser, errs);
+    num->value.num *= operand;
+    return num;
   }
   return parse_chars(parser, errs);
 }
@@ -381,6 +391,13 @@ Parser new_parser(const char* input) {
   };
 }
 char get_curr_char(Parser* parser) { return parser->input[parser->idx]; }
+
+char peek_char(Parser* parser) {
+  char current = parser->input[parser->idx];
+  if (current == '\0') return current;
+  char next = parser->input[parser->idx + 1];
+  return next;
+}
 
 char read_char(Parser* parser) {
   char current = parser->input[parser->idx];

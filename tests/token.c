@@ -25,6 +25,36 @@ void test_parse_num(void) {
                      .value.num = 123,
                  },
                  "123");
+  run_parse_test(" -123  ",
+                 &(Token){
+                     .type = TOKEN_NUM,
+                     .value.num = -123,
+                 },
+                 "-123");
+  run_parse_test(" --123  ",
+                 &(Token){
+                     .type = TOKEN_NUM,
+                     .value.num = 123,
+                 },
+                 "123");
+  run_parse_test(" ---123  ",
+                 &(Token){
+                     .type = TOKEN_NUM,
+                     .value.num = -123,
+                 },
+                 "-123");
+  run_parse_test(" -----123  ",
+                 &(Token){
+                     .type = TOKEN_NUM,
+                     .value.num = -123,
+                 },
+                 "-123");
+  run_parse_test(" ------123  ",
+                 &(Token){
+                     .type = TOKEN_NUM,
+                     .value.num = 123,
+                 },
+                 "123");
 }
 
 void test_parse_list_with_one_element(void) {
