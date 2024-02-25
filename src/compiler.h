@@ -24,13 +24,13 @@ typedef struct {
   Array* scopes;   // array of indices from idents
   Array* code;     // array of chars
   Array* errs;     // array of errors
-  Token* token;    // token to compile
   uint64_t stack;  // number of variables on the stack
 } Compiler;
 
-Compiler new_compiler(Token* token);
-void compile(Compiler* cs);
+Compiler new_compiler(void);
+void compile(Compiler* cs, Token* token);
 void enter_scope(Compiler* cs);
 void leave_scope(Compiler* cs);
+bool is_defined(Compiler* cs, FatStr* str);
 
 #endif  // COMPILER_H

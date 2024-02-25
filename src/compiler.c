@@ -4,45 +4,69 @@
 #include <stdlib.h>
 #include <strings.h>
 
-// void compile_do(Compiler* cs, Token* token) {
-//   enter_scope(cs);
+void compile_var(Compiler* cs, Token* token) {
+  Token* var_name = token->value.list.data[1];
+  if (var_name->type != TOKEN_IDENTIFIER) {
+    array_append(cs->errs, &(Error){
+                               .type = ERROR_EXPECTED_IDENTIFIER,
+                           });
+  }
 
-//   for (uint64_t i = 1; i < token->value.list.length; i++) {
-//     compile(cs, token->value.list.data[i]);
-//   }
+  if (is_defined(cs, &var_name->value.identifier)) {
+    array_append(cs->errs, &(Error){
+                               .type = ERROR_DUPLICATE_IDENT,
+                           });
+  }
 
-//   leave_scope(cs);
-// }
+  compile(cs, token->value.list.data[2]);
 
-// void compile_list(Compiler* cs, Token* token) {
-//   uint64_t length = token->value.list.length;
+  if (array_append(cs->idents, &(Identifier){
+                                   .name = var_name->value.identifier,
+                                   .type = TYPE_INT,
+                               }) != 0) {
+    array_append(cs->errs, &(Error){
+                               .type = ERROR_MALLOC,
+                           });
+  }
+}
 
-//   // Example: (var a 1)
-//   if (token->value.list.data[0]->type == TOKEN_VAR && length == 3) {
-//     return evaluate_var(token, env, result);
-//   }
+void compile_do(Compiler* cs, Token* token) {
+  enter_scope(cs);
 
-//   // Example: (do ...)
-//   if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
-//     compile_do(cs, token);
-//   }
-// }
+  for (uint64_t i = 1; i < token->value.list.length; i++) {
+    compile(cs, token->value.list.data[i]);
+  }
 
-Compiler new_compiler(Token* token) {
+  leave_scope(cs);
+}
+
+void compile_list(Compiler* cs, Token* token) {
+  uint64_t length = token->value.list.length;
+
+  // Example: (var a 1)
+  if (token->value.list.data[0]->type == TOKEN_VAR && length == 3) {
+    compile_var(cs, token);
+  }
+
+  // Example: (do ...)
+  if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
+    compile_do(cs, token);
+  }
+}
+
+Compiler new_compiler(void) {
   Compiler compiler = (Compiler){
       .idents = array_new(10, sizeof(Identifier)),
       .scopes = array_new(10, sizeof(uint64_t)),
       .code = array_new(10, sizeof(char)),
       .errs = array_new(10, sizeof(Error)),
-      .token = token,
       .stack = 0,
   };
 
   return compiler;
 }
 
-void compile(Compiler* cs) {
-  Token* token = cs->token;
+void compile(Compiler* cs, Token* token) {
   if (token == NULL) {
     array_append(cs->errs, &(Error){
                                .type = ERROR_EMPTY_PROGRAM,
@@ -50,10 +74,10 @@ void compile(Compiler* cs) {
   }
 
   switch (token->type) {
-    // case TOKEN_LIST: {
-    //   compile_list(cs);
-    //   break;
-    // }
+    case TOKEN_LIST: {
+      compile_list(cs, token);
+      break;
+    }
     case TOKEN_NUM: {
       array_append_fmt(cs->code, "const %lld %lld", token->value.num,
                        cs->stack++);
@@ -77,4 +101,15 @@ void enter_scope(Compiler* cs) {
 void leave_scope(Compiler* cs) {
   size_t* current_scope = (size_t*)array_pop(cs->scopes);
   array_truncate(cs->idents, *current_scope);
+}
+
+bool is_defined(Compiler* cs, FatStr* str) {
+  for (size_t i = 0; i < array_length(cs->idents); i++) {
+    Identifier* cur = array_get(cs->idents, i);
+    if (fatstr_cmp(&cur->name, str)) {
+      return true;
+    }
+  }
+
+  return false;
 }
