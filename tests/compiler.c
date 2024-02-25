@@ -28,6 +28,15 @@ void test_var(void) {
       "    (var a 123)"
       ")",
       "const 123 0");
+  run_compiler_test(
+      "(do "
+      "    (var a 1)"
+      "    (var b 2)"
+      "    (var c 3)"
+      ")",
+      "const 1 0"
+      "const 2 1"
+      "const 3 2");
 }
 
 int main(void) {
