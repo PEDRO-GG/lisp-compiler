@@ -12,6 +12,7 @@ typedef enum {
   TYPE_FUNC,
   TYPE_BYTE,
   TYPE_BYTE_PTR,
+  TYPE_VOID,
 } ValueType;
 
 typedef struct {
@@ -24,13 +25,19 @@ typedef struct {
   Array* scopes;   // array of indices from idents
   Array* code;     // array of chars
   Array* errs;     // array of errors
-  uint64_t stack;  // number of variables on the stack
+  uint64_t stack;  // next available register
 } Compiler;
 
+typedef struct {
+  ValueType type;
+  uint64_t reg;
+} CompileResult;
+
 Compiler new_compiler(void);
-void compile(Compiler* cs, Token* token);
+CompileResult compile(Compiler* cs, Token* token);
 void enter_scope(Compiler* cs);
 void leave_scope(Compiler* cs);
 bool is_defined(Compiler* cs, FatStr* str);
+uint64_t tmp(Compiler* cs);
 
 #endif  // COMPILER_H

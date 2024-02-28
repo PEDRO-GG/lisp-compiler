@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
-void compile_var(Compiler* cs, Token* token) {
+CompileResult compile_var(Compiler* cs, Token* token) {
   Token* var_name = token->value.list.data[1];
   if (var_name->type != TOKEN_IDENTIFIER) {
     array_append(cs->errs, &(Error){
@@ -18,8 +18,6 @@ void compile_var(Compiler* cs, Token* token) {
                            });
   }
 
-  compile(cs, token->value.list.data[2]);
-
   if (array_append(cs->idents, &(Identifier){
                                    .name = var_name->value.identifier,
                                    .type = TYPE_INT,
@@ -28,30 +26,76 @@ void compile_var(Compiler* cs, Token* token) {
                                .type = ERROR_MALLOC,
                            });
   }
+
+  return compile(cs, token->value.list.data[2]);
 }
 
-void compile_do(Compiler* cs, Token* token) {
+CompileResult compile_do(Compiler* cs, Token* token) {
   enter_scope(cs);
 
+  CompileResult cr;
   for (uint64_t i = 1; i < token->value.list.length; i++) {
-    compile(cs, token->value.list.data[i]);
+    cr = compile(cs, token->value.list.data[i]);
   }
 
   leave_scope(cs);
+  return cr;
 }
 
-void compile_list(Compiler* cs, Token* token) {
+CompileResult compile_binop(Compiler* cs, Token* token) {
+  // Destruct
+  Token* op = token->value.list.data[0];
+  Token* lhs = token->value.list.data[1];
+  Token* rhs = token->value.list.data[2];
+
+  // Compile operands
+  uint64_t save = cs->stack;
+  CompileResult lhs_res = compile(cs, lhs);
+  CompileResult rhs_res = compile(cs, rhs);
+  cs->stack = save;  // Discard temp vars. They'll already be in cs->code
+
+  // Check types
+  if (lhs_res.type != rhs_res.type) {
+    array_append(cs->errs, &(Error){
+                               .type = ERROR_DIFF_TYPES,
+                           });
+  }
+
+  // Code gen
+  char buffer[100] = {0};
+  token_to_string(op, buffer);
+  uint64_t dst = tmp(cs);  // Consume the next register
+  array_append_fmt(cs->code, "binop %s %lld %lld %lld", buffer, lhs_res.reg,
+                   rhs_res.reg, dst);
+
+  return (CompileResult){
+      .reg = dst,
+      .type = lhs_res.type,
+  };
+}
+
+CompileResult compile_list(Compiler* cs, Token* token) {
   uint64_t length = token->value.list.length;
+
+  // Example: (+ 1 2)
+  if (token_is_op(token->value.list.data[0]->type) && length == 3) {
+    return compile_binop(cs, token);
+  }
 
   // Example: (var a 1)
   if (token->value.list.data[0]->type == TOKEN_VAR && length == 3) {
-    compile_var(cs, token);
+    return compile_var(cs, token);
   }
 
   // Example: (do ...)
   if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
-    compile_do(cs, token);
+    return compile_do(cs, token);
   }
+
+  return (CompileResult){
+      .reg = -1,
+      .type = TYPE_VOID,
+  };
 }
 
 Compiler new_compiler(void) {
@@ -66,7 +110,7 @@ Compiler new_compiler(void) {
   return compiler;
 }
 
-void compile(Compiler* cs, Token* token) {
+CompileResult compile(Compiler* cs, Token* token) {
   if (token == NULL) {
     array_append(cs->errs, &(Error){
                                .type = ERROR_EMPTY_PROGRAM,
@@ -75,17 +119,26 @@ void compile(Compiler* cs, Token* token) {
 
   switch (token->type) {
     case TOKEN_LIST: {
-      compile_list(cs, token);
+      return compile_list(cs, token);
       break;
     }
     case TOKEN_NUM: {
-      array_append_fmt(cs->code, "const %lld %lld", token->value.num,
-                       cs->stack++);
+      uint64_t dst = tmp(cs);
+      array_append_fmt(cs->code, "const %lld %lld", token->value.num, dst);
+      return (CompileResult){
+          .reg = dst,
+          .type = TYPE_INT,
+      };
       break;
     }
 
-    default:
+    default: {
+      return (CompileResult){
+          .reg = -1,
+          .type = TYPE_VOID,
+      };
       break;
+    }
   }
 }
 
@@ -113,3 +166,5 @@ bool is_defined(Compiler* cs, FatStr* str) {
 
   return false;
 }
+
+uint64_t tmp(Compiler* cs) { return cs->stack++; }

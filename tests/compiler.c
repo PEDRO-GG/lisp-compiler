@@ -39,8 +39,16 @@ void test_var(void) {
       "const 3 2");
 }
 
+void test_binop(void) {
+  run_compiler_test("(- 1 2)",
+                    "const 1 0"
+                    "const 2 1"
+                    "binop - 0 1 0");
+}
+
 int main(void) {
   ADD_TEST(test_num);
+  ADD_TEST(test_binop);
   ADD_TEST(test_var);
   RUN_TESTS();
   return exit_code();
