@@ -1,5 +1,6 @@
 #include "compiler.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -62,11 +63,17 @@ CompileResult compile_binop(Compiler* cs, Token* token) {
   }
 
   // Code gen
-  char buffer[100] = {0};
-  token_to_string(op, buffer);
   uint64_t dst = tmp(cs);  // Consume the next register
-  array_append_fmt(cs->code, "binop %s %lld %lld %lld", buffer, lhs_res.reg,
-                   rhs_res.reg, dst);
+  array_append(cs->code, &(Instruction){
+                             .type = INSTRUCTION_BINOP,
+                             .value.binop =
+                                 (InstructionBinOP){
+                                     .op = op,
+                                     .left = lhs_res,
+                                     .right = rhs_res,
+                                     .reg = dst,
+                                 },
+                         });
 
   return (CompileResult){
       .reg = dst,
@@ -102,7 +109,7 @@ Compiler new_compiler(void) {
   Compiler compiler = (Compiler){
       .idents = array_new(10, sizeof(Identifier)),
       .scopes = array_new(10, sizeof(uint64_t)),
-      .code = array_new(10, sizeof(char)),
+      .code = array_new(10, sizeof(Instruction)),
       .errs = array_new(10, sizeof(Error)),
       .stack = 0,
   };
@@ -124,7 +131,14 @@ CompileResult compile(Compiler* cs, Token* token) {
     }
     case TOKEN_NUM: {
       uint64_t dst = tmp(cs);
-      array_append_fmt(cs->code, "const %lld %lld", token->value.num, dst);
+      array_append(cs->code, &(Instruction){
+                                 .type = INSTRUCTION_CONST,
+                                 .value.constant =
+                                     (InstructionConst){
+                                         .reg = dst,
+                                         .value = token->value.num,
+                                     },
+                             });
       return (CompileResult){
           .reg = dst,
           .type = TYPE_INT,
@@ -168,3 +182,31 @@ bool is_defined(Compiler* cs, FatStr* str) {
 }
 
 uint64_t tmp(Compiler* cs) { return cs->stack++; }
+
+void instruction_to_string(Instruction* inst, char* buffer) {
+  assert(inst != NULL);
+  assert(buffer != NULL);
+
+  switch (inst->type) {
+    case INSTRUCTION_CONST: {
+      char num[100];
+      sprintf(num, "const %lld %lld", inst->value.constant.value,
+              inst->value.constant.reg);
+      strcat(buffer, num);
+      break;
+    }
+    case INSTRUCTION_BINOP: {
+      char tkn_buffer[100] = {0};
+      token_to_string(inst->value.binop.op, tkn_buffer);
+      char op[100] = {0};
+      sprintf(op, "binop %s %lld %lld %lld", tkn_buffer,
+              inst->value.binop.left.reg, inst->value.binop.right.reg,
+              inst->value.binop.reg);
+      strcat(buffer, op);
+      break;
+    }
+
+    default:
+      break;
+  }
+}

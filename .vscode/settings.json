@@ -61,6 +61,7 @@
         "compiler.h": "c",
         "array.h": "c",
         "cstdlib": "c",
-        "version": "c"
+        "version": "c",
+        "__config": "c"
     }
 }

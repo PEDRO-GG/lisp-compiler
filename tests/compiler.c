@@ -11,7 +11,13 @@ void run_compiler_test(const char* input, const char* expected) {
   Token* tkn = parse(&parser);
   Compiler cs = new_compiler();
   compile(&cs, tkn);
-  bool res = array_compare_with_string(cs.code, expected);
+  char buffer[100] = {0};
+  for (size_t i = 0; i < array_length(cs.code); i++) {
+    Instruction* inst = array_get(cs.code, i);
+    instruction_to_string(inst, buffer);
+  }
+
+  bool res = strcmp(buffer, expected) == 0;
   TEST_EQ(res, true);
 }
 
