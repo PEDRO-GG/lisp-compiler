@@ -50,6 +50,10 @@ void test_binop(void) {
                     "const 1 0"
                     "const 2 1"
                     "binop - 0 1 0");
+  run_compiler_test("(+ 100 200)",
+                    "const 100 0"
+                    "const 200 1"
+                    "binop + 0 1 0");
 }
 
 int main(void) {
