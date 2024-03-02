@@ -30,19 +30,54 @@ void test_num(void) {
 
 void test_var(void) {
   run_compiler_test(
+      "(do "
+      "  (var a 100)"
+      "  (var b 200)"
+      "  (var c 300)"
+      ")",
+      "const 100 0\n"
+      "const 200 1\n"
+      "const 300 2\n"
+      "mov 2 0\n");
+  run_compiler_test(
       "(do"
       "    (var a 123)"
       ")",
       "const 123 0\n");
-  run_compiler_test(
-      "(do "
-      "    (var a 1)"
-      "    (var b 2)"
-      "    (var c 3)"
-      ")",
-      "const 1 0\n"
-      "const 2 1\n"
-      "const 3 2\n");
+  // run_compiler_test(
+  //     "(do "
+  //     "    (var a 1)"
+  //     "    (var b 2)"
+  //     "    (var c 3)"
+  //     "    (var d 4)"
+  //     "    (do"
+  //     "        (var e 5)"
+  //     "        (var f 6)"
+  //     "        (var g 7)"
+  //     "        (var h 8)"
+  //     "        (do"
+  //     "            (var i 9)"
+  //     "            (var j 10)"
+  //     "            (var k 11)"
+  //     "            (var l 12)"
+  //     "        )"
+  //     "    )"
+  //     ")",
+  //     "const 1 0\n"
+  //     "const 2 1\n"
+  //     "const 3 2\n"
+  //     "const 4 3\n"
+  //     "const 5 4\n"
+  //     "const 6 5\n"
+  //     "const 7 6\n"
+  //     "const 8 7\n"
+  //     "const 9 8\n"
+  //     "const 10 9\n"
+  //     "const 11 10\n"
+  //     "const 12 11\n"
+  //     "mov 11 8\n"
+  //     "mov 8 4\n"
+  //     "mov 4 0\n");
 }
 
 void test_binop(void) {
@@ -58,8 +93,8 @@ void test_binop(void) {
 
 int main(void) {
   ADD_TEST(test_num);
-  ADD_TEST(test_binop);
   ADD_TEST(test_var);
+  ADD_TEST(test_binop);
   RUN_TESTS();
   return exit_code();
 }

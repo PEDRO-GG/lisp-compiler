@@ -7,28 +7,39 @@
 
 CompileResult compile_var(Compiler* cs, Token* token) {
   Token* var_name = token->value.list.data[1];
+
+  // Variable names must be identifiers
   if (var_name->type != TOKEN_IDENTIFIER) {
     array_append(cs->errs, &(Error){
                                .type = ERROR_EXPECTED_IDENTIFIER,
                            });
   }
 
+  // Check if name is already taken
   if (is_defined(cs, &var_name->value.identifier)) {
     array_append(cs->errs, &(Error){
                                .type = ERROR_DUPLICATE_IDENT,
                            });
   }
 
+  // Compile the right-hand side
+  CompileResult cr = compile(cs, token->value.list.data[2]);
+
+  // Store the identifer for future reference
   if (array_append(cs->idents, &(Identifier){
                                    .name = var_name->value.identifier,
-                                   .type = TYPE_INT,
+                                   .type = cr.type,
+                                   .reg = cr.reg,
                                }) != 0) {
     array_append(cs->errs, &(Error){
                                .type = ERROR_MALLOC,
                            });
   }
 
-  return compile(cs, token->value.list.data[2]);
+  return (CompileResult){
+      .type = cr.type,
+      .reg = move_to(cs, cr.reg, cs->stack++),
+  };
 }
 
 CompileResult compile_do(Compiler* cs, Token* token) {
@@ -205,8 +216,28 @@ void instruction_to_string(Instruction* inst, char* buffer) {
       strcat(buffer, op);
       break;
     }
-
-    default:
+    case INSTRUCTION_MOV: {
+      sprintf(buffer, "mov %lld %lld\n", inst->value.mov.dst,
+              inst->value.mov.reg);
       break;
+    }
+    default: {
+      break;
+    }
   }
+}
+
+uint64_t move_to(Compiler* cs, uint64_t reg, uint64_t dst) {
+  if (reg != dst) {
+    array_append(cs->code, &(Instruction){
+                               .type = INSTRUCTION_MOV,
+                               .value.mov =
+                                   (InstructionMov){
+                                       .reg = reg,
+                                       .dst = dst,
+                                   },
+                           });
+  }
+
+  return dst;
 }
