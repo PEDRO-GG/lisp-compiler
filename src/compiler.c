@@ -190,7 +190,7 @@ void instruction_to_string(Instruction* inst, char* buffer) {
   switch (inst->type) {
     case INSTRUCTION_CONST: {
       char num[100];
-      sprintf(num, "const %lld %lld", inst->value.constant.value,
+      sprintf(num, "const %lld %lld\n", inst->value.constant.value,
               inst->value.constant.reg);
       strcat(buffer, num);
       break;
@@ -199,7 +199,7 @@ void instruction_to_string(Instruction* inst, char* buffer) {
       char tkn_buffer[100] = {0};
       token_to_string(inst->value.binop.op, tkn_buffer);
       char op[100] = {0};
-      sprintf(op, "binop %s %lld %lld %lld", tkn_buffer,
+      sprintf(op, "binop %s %lld %lld %lld\n", tkn_buffer,
               inst->value.binop.left.reg, inst->value.binop.right.reg,
               inst->value.binop.reg);
       strcat(buffer, op);

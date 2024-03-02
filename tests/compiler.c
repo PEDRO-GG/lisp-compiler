@@ -22,10 +22,10 @@ void run_compiler_test(const char* input, const char* expected) {
 }
 
 void test_num(void) {
-  run_compiler_test("10", "const 10 0");
-  run_compiler_test("-10", "const -10 0");
-  run_compiler_test("1000", "const 1000 0");
-  run_compiler_test("---1000", "const -1000 0");
+  run_compiler_test("10", "const 10 0\n");
+  run_compiler_test("-10", "const -10 0\n");
+  run_compiler_test("1000", "const 1000 0\n");
+  run_compiler_test("---1000", "const -1000 0\n");
 }
 
 void test_var(void) {
@@ -33,27 +33,27 @@ void test_var(void) {
       "(do"
       "    (var a 123)"
       ")",
-      "const 123 0");
+      "const 123 0\n");
   run_compiler_test(
       "(do "
       "    (var a 1)"
       "    (var b 2)"
       "    (var c 3)"
       ")",
-      "const 1 0"
-      "const 2 1"
-      "const 3 2");
+      "const 1 0\n"
+      "const 2 1\n"
+      "const 3 2\n");
 }
 
 void test_binop(void) {
   run_compiler_test("(- 1 2)",
-                    "const 1 0"
-                    "const 2 1"
-                    "binop - 0 1 0");
+                    "const 1 0\n"
+                    "const 2 1\n"
+                    "binop - 0 1 0\n");
   run_compiler_test("(+ 100 200)",
-                    "const 100 0"
-                    "const 200 1"
-                    "binop + 0 1 0");
+                    "const 100 0\n"
+                    "const 200 1\n"
+                    "binop + 0 1 0\n");
 }
 
 int main(void) {
