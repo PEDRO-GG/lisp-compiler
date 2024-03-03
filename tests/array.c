@@ -275,8 +275,92 @@ void test_char_array_fmt(void) {
   TEST_EQ(res, true);
 }
 
+void test_array_cmp(void) {
+  typedef struct {
+    int x;
+    char y[10];  // Problem: If type is `char*`, this test stops working
+  } Thing;
+
+  Array* array1 = array_new(10, sizeof(Thing));
+  Array* array2 = array_new(10, sizeof(Thing));
+
+  array_append(array1, &(Thing){
+                           .x = 32,
+                           .y = "Hello",
+                       });
+  array_append(array2, &(Thing){
+                           .x = 32,
+                           .y = "Hello",
+                       });
+  array_append(array1, &(Thing){
+                           .x = 33,
+                           .y = "IfmmP",
+                       });
+  array_append(array2, &(Thing){
+                           .x = 33,
+                           .y = "IfmmP",
+                       });
+  array_append(array1, &(Thing){
+                           .x = 34,
+                           .y = "JgnnQ",
+                       });
+  array_append(array2, &(Thing){
+                           .x = 34,
+                           .y = "JgnnQ",
+                       });
+  array_append(array1, &(Thing){
+                           .x = 35,
+                           .y = "KhooR",
+                       });
+  array_append(array2, &(Thing){
+                           .x = 35,
+                           .y = "KhooR",
+                       });
+  array_append(array1, &(Thing){
+                           .x = 36,
+                           .y = "LippS",
+                       });
+  array_append(array2, &(Thing){
+                           .x = 36,
+                           .y = "LippS",
+                       });
+  array_append(array1, &(Thing){
+                           .x = 37,
+                           .y = "MjqqT",
+                       });
+  array_append(array2, &(Thing){
+                           .x = 37,
+                           .y = "MjqqT",
+                       });
+  array_append(array1, &(Thing){
+                           .x = 38,
+                           .y = "NkrrU",
+                       });
+  array_append(array2, &(Thing){
+                           .x = 38,
+                           .y = "NkrrU",
+                       });
+
+  TEST_EQ(array1->length, 7);
+  TEST_EQ(array1->capacity, 10);
+  TEST_EQ(array2->length, 7);
+  TEST_EQ(array2->capacity, 10);
+
+  bool res = array_cmp(array1, array2);
+  TEST_EQ(res, true);
+
+  // Test fail case
+  // array_append(array2, &(Thing){
+  //                          .x = 38,
+  //                          .y = "NkrrU",
+  //                      });
+  // res = array_cmp(array1, array2);
+  // TEST_EQ(res, false);
+}
+
 int main(void) {
   ADD_TEST(test_array);
+  ADD_TEST(test_array_cmp);
   ADD_TEST(test_char_array);
   ADD_TEST(test_char_array_fmt);
   RUN_TESTS();

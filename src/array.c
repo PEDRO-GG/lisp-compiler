@@ -201,3 +201,24 @@ bool array_compare_with_string(Array* array, const char* str) {
 
   return true;  // Match
 }
+
+bool array_cmp(struct Array* arr1, struct Array* arr2) {
+  if (arr1->length != arr2->length || arr1->capacity != arr2->capacity ||
+      arr1->element_size != arr2->element_size) {
+    return false;
+  }
+
+  // Compare each element of the arrays
+  for (size_t i = 0; i < arr1->length; ++i) {
+    // Calculate the addresses of the current elements
+    void* elem1 = (char*)arr1->data + (i * arr1->element_size);
+    void* elem2 = (char*)arr2->data + (i * arr2->element_size);
+
+    // Compare the current elements byte by byte
+    if (memcmp(elem1, elem2, arr1->element_size) != 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
