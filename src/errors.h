@@ -41,5 +41,6 @@ typedef struct {
 } Error;
 
 void errors_print(Array* errs);
+bool errors_cmp(Error* err1, Error* err2);
 
 #endif  // ERRORS_H

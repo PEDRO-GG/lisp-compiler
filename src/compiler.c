@@ -241,3 +241,42 @@ uint64_t move_to(Compiler* cs, uint64_t reg, uint64_t dst) {
 
   return dst;
 }
+
+bool ident_cmp(Identifier* i1, Identifier* i2) {
+  return fatstr_cmp(&i1->name, &i2->name) && i1->reg == i2->reg &&
+         i1->type == i2->type;
+}
+
+bool instruction_cmp(Instruction* i1, Instruction* i2) {
+  if (i1->type != i2->type) {
+    return false;
+  }
+
+  switch (i1->type) {
+    case INSTRUCTION_CONST: {
+      return i1->value.constant.reg == i2->value.constant.reg &&
+             i1->value.constant.value == i2->value.constant.value;
+      break;
+    }
+    case INSTRUCTION_BINOP: {
+      return compile_result_cmp(&i1->value.binop.left, &i2->value.binop.left) &&
+             tkncmp(i1->value.binop.op, i2->value.binop.op) &&
+             i1->value.binop.reg == i2->value.binop.reg &&
+             compile_result_cmp(&i1->value.binop.right, &i2->value.binop.right);
+      break;
+    }
+    case INSTRUCTION_MOV: {
+      return i1->value.mov.dst == i2->value.mov.dst &&
+             i1->value.mov.reg == i2->value.mov.reg;
+      break;
+    }
+    default: {
+      return false;
+      break;
+    }
+  }
+}
+
+bool compile_result_cmp(CompileResult* c1, CompileResult* c2) {
+  return c1->reg == c2->reg && c1->type == c2->type;
+}

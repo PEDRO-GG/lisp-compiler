@@ -79,5 +79,6 @@ bool is_defined(Compiler* cs, FatStr* str);
 uint64_t tmp(Compiler* cs);
 void instruction_to_string(Instruction* inst, char* buffer);
 uint64_t move_to(Compiler* cs, uint64_t reg, uint64_t dst);
+bool compile_result_cmp(CompileResult* c1, CompileResult* c2);
 
 #endif  // COMPILER_H
