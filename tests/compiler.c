@@ -40,6 +40,7 @@ void test_num(void) {
   run_compiler_test("-10", "const -10 0\n", NULL);
   run_compiler_test("1000", "const 1000 0\n", NULL);
   run_compiler_test("---1000", "const -1000 0\n", NULL);
+  run_compiler_test("(do 1 2)", "const 1 0\nconst 2 0\n", NULL);
 }
 
 void test_var(void) {
@@ -128,6 +129,28 @@ void test_binop(void) {
                     "const 100 0\n"
                     "const 200 1\n"
                     "binop + 0 1 0\n",
+                    NULL);
+  run_compiler_test("(+ (- 1 2) 3)",
+                    "const 1 0\n"
+                    "const 2 1\n"
+                    "binop - 0 1 0\n"
+                    "const 3 1\n"
+                    "binop + 0 1 0\n",
+                    NULL);
+  run_compiler_test("(do (var a 1) (+ 3 a))",
+                    "const 1 0\n"
+                    "const 3 1\n"
+                    "binop + 1 0 1\n"
+                    "mov 1 0\n",
+                    NULL);
+  run_compiler_test("(do (var a 1) (set a (+ 3 a)) (var b 2) (- b a))",
+                    "const 1 0\n"
+                    "const 3 1\n"
+                    "binop + 1 0 1\n"
+                    "mov 1 0\n"
+                    "const 2 1\n"
+                    "binop - 1 0 2\n"
+                    "mov 2 0\n",
                     NULL);
 }
 
