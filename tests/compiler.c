@@ -152,6 +152,14 @@ void test_binop(void) {
                     "binop - 1 0 2\n"
                     "mov 2 0\n",
                     NULL);
+  run_compiler_test("(do (var a 1) (do (var b (+ a 2)) (set a (+ b 3))) )",
+                    "const 1 0\n"
+                    "const 2 1\n"
+                    "binop + 0 1 1\n"
+                    "const 3 2\n"
+                    "binop + 1 2 2\n"
+                    "mov 2 0\n",
+                    NULL);
 }
 
 int main(void) {
