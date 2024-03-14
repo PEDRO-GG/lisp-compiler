@@ -98,6 +98,26 @@ void test_var(void) {
       NULL);
 }
 
+void test_set(void) {
+  run_compiler_test(
+      "(do "
+      "  (var a 100)"
+      "  (var b 200)"
+      "  (var c -1)"
+      "  (var d -1)"
+      "  (set c a)"
+      "  (set d b)"
+      ")",
+      "const 100 0\n"
+      "const 200 1\n"
+      "const -1 2\n"
+      "const -1 3\n"
+      "mov 0 2\n"
+      "mov 1 3\n"
+      "mov 3 0\n",
+      NULL);
+}
+
 void test_binop(void) {
   run_compiler_test("(- 1 2)",
                     "const 1 0\n"
@@ -114,6 +134,7 @@ void test_binop(void) {
 int main(void) {
   ADD_TEST(test_num);
   ADD_TEST(test_var);
+  ADD_TEST(test_set);
   ADD_TEST(test_binop);
   RUN_TESTS();
   return exit_code();
