@@ -21,15 +21,14 @@ typedef enum {
 } ValueType;
 
 typedef struct {
-  FatStr name;
   ValueType type;
-  uint64_t reg;
-} Identifier;
+  int64_t dst;
+} CompileResult;
 
 typedef struct {
-  ValueType type;
-  uint64_t reg;
-} CompileResult;
+  FatStr name;
+  CompileResult cr;
+} Identifier;
 
 typedef enum {
   INSTRUCTION_CONST,
@@ -39,11 +38,11 @@ typedef enum {
 
 struct InstructionConst {
   int64_t value;
-  uint64_t reg;
+  uint64_t dst;
 };
 
 struct InstructionMov {
-  uint64_t reg;
+  uint64_t src;
   uint64_t dst;
 };
 
@@ -51,7 +50,7 @@ struct InstructionBinOP {
   CompileResult left;
   CompileResult right;
   Token* op;
-  uint64_t reg;
+  uint64_t dst;
 };
 
 struct Instruction {
@@ -63,22 +62,42 @@ struct Instruction {
   } value;
 };
 
+typedef struct Scope {
+  struct Scope* prev;
+  uint64_t nlocal;
+  uint64_t save;
+  Array* names;  // []Identifier
+} Scope;
+
 typedef struct {
-  Array* idents;   // array of identifiers
-  Array* scopes;   // array of indices from idents
-  Array* code;     // array of instructions
-  Array* errs;     // array of errors
-  uint64_t stack;  // next available register
+  Scope* scope;  // Current scope
+  Array* code;   // Array of instructions
+  int64_t nvar;
+  int64_t stack;
 } Compiler;
 
-Compiler new_compiler(void);
-CompileResult compile(Compiler* cs, Token* token);
 void enter_scope(Compiler* cs);
 void leave_scope(Compiler* cs);
-bool is_defined(Compiler* cs, FatStr* str);
+uint64_t add_var(Compiler* cs, FatStr name, ValueType type);
+CompileResult get_var(Compiler* cs, FatStr name);
 uint64_t tmp(Compiler* cs);
+Scope* new_scope(Scope* prev);
+CompileResult scope_get_var(Scope* scope, FatStr name);
+CompileResult compile_expr(Compiler* cs, Token* token, bool allow_vars);
+CompileResult compile_const(Compiler* cs, Token* token);
+CompileResult compile_binop(Compiler* cs, Token* token);
+CompileResult compile_expr_tmp(Compiler* cs, Token* token, bool allow_vars);
+CompileResult compile_scope(Compiler* cs, Token* token);
+uint64_t move_to(Compiler* cs, uint64_t src, uint64_t dst);
+CompileResult compile_var(Compiler* cs, Token* token);
+CompileResult compile_set(Compiler* cs, Token* token);
+Compiler new_compiler(void);
+bool is_defined(Compiler* cs, FatStr* str);
 void instruction_to_string(Instruction* inst, char* buffer);
-uint64_t move_to(Compiler* cs, uint64_t reg, uint64_t dst);
+bool ident_cmp(Identifier* i1, Identifier* i2);
+bool instruction_cmp(Instruction* i1, Instruction* i2);
 bool compile_result_cmp(CompileResult* c1, CompileResult* c2);
+bool scope_cmp(Scope* s1, Scope* s2);
+bool compiler_cmp(Compiler* c1, Compiler* c2);
 
 #endif  // COMPILER_H

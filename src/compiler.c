@@ -5,53 +5,135 @@
 #include <stdlib.h>
 #include <strings.h>
 
-CompileResult compile_var(Compiler* cs, Token* token) {
-  Token* var_name = token->value.list.data[1];
+void enter_scope(Compiler* cs) {
+  cs->scope = new_scope(cs->scope);
+  cs->scope->save = cs->stack;
+}
 
-  // Variable names must be identifiers
-  if (var_name->type != TOKEN_IDENTIFIER) {
-    array_append(cs->errs, &(Error){
-                               .type = ERROR_EXPECTED_IDENTIFIER,
-                           });
+void leave_scope(Compiler* cs) {
+  cs->stack = cs->scope->save;
+  cs->nvar -= cs->scope->nlocal;
+  cs->scope = cs->scope->prev;
+}
+
+uint64_t add_var(Compiler* cs, FatStr name, ValueType type) {
+  if (is_defined(cs, &name)) {
+    perror("duplicated name");
+    exit(EXIT_FAILURE);
   }
 
-  // Check if name is already taken
-  if (is_defined(cs, &var_name->value.identifier)) {
-    array_append(cs->errs, &(Error){
-                               .type = ERROR_DUPLICATE_IDENT,
-                           });
+  Identifier* to_add = &(Identifier){
+      .name = name,
+      .cr =
+          (CompileResult){
+              .type = type,
+              .dst = cs->nvar,
+          },
+  };
+
+  if (array_append(cs->scope->names, to_add) != 0) {
+    perror("failed to append to array");
+    exit(EXIT_FAILURE);
   }
 
-  // Compile the right-hand side
-  CompileResult cr = compile(cs, token->value.list.data[2]);
+  cs->scope->nlocal++;
 
-  // Store the identifer for future reference
-  if (array_append(cs->idents, &(Identifier){
-                                   .name = var_name->value.identifier,
-                                   .type = cr.type,
-                                   .reg = cr.reg,
-                               }) != 0) {
-    array_append(cs->errs, &(Error){
-                               .type = ERROR_MALLOC,
-                           });
+  assert(cs->stack == cs->nvar);
+
+  uint64_t dst = cs->stack;
+  cs->stack++;
+  cs->nvar++;
+  return dst;
+}
+
+CompileResult get_var(Compiler* cs, FatStr name) {
+  CompileResult cr = scope_get_var(cs->scope, name);
+  if (cr.dst >= 0) return cr;
+  perror("undefined name");
+  exit(EXIT_FAILURE);
+}
+
+uint64_t tmp(Compiler* cs) {
+  uint64_t dst = cs->stack;
+  cs->stack++;
+  return dst;
+}
+
+Scope* new_scope(Scope* prev) {
+  Scope* scope = malloc(sizeof(Scope));
+  if (scope == NULL) {
+    perror("memory allocation failed");
+    exit(EXIT_FAILURE);
+  }
+
+  scope->prev = prev;
+  scope->nlocal = 0;
+  scope->save = 0;
+
+  scope->names = array_new(20, sizeof(Identifier));
+  if (scope->names == NULL) {
+    perror("memory allocation failed");
+    exit(EXIT_FAILURE);
+  }
+
+  return scope;
+}
+
+CompileResult scope_get_var(Scope* scope, FatStr name) {
+  while (scope) {
+    Array* names = scope->names;
+    size_t names_length = array_length(scope->names);
+
+    for (size_t i = 0; i < names_length; i++) {
+      Identifier* cur = array_get(names, i);
+      if (fatstr_cmp(&cur->name, &name)) {
+        return cur->cr;
+      }
+    }
+
+    scope = scope->prev;
   }
 
   return (CompileResult){
-      .type = cr.type,
-      .reg = move_to(cs, cr.reg, cs->stack++),
+      .dst = -1,
+      .type = TYPE_VOID,
   };
 }
 
-CompileResult compile_do(Compiler* cs, Token* token) {
-  enter_scope(cs);
+CompileResult compile_expr(Compiler* cs, Token* token, bool allow_vars) {
+  if (allow_vars) {
+    assert(cs->stack == cs->nvar);
+  }
+  uint64_t save = cs->stack;
 
-  CompileResult cr;
-  for (uint64_t i = 1; i < token->value.list.length; i++) {
-    cr = compile(cs, token->value.list.data[i]);
+  CompileResult cr = compile_expr_tmp(cs, token, allow_vars);
+  assert(cr.dst < cs->stack);
+
+  if (allow_vars) {
+    cs->stack = cs->nvar;
+  } else {
+    cs->stack = save;
   }
 
-  leave_scope(cs);
+  assert(cr.dst <= cs->stack);
   return cr;
+}
+
+CompileResult compile_const(Compiler* cs, Token* token) {
+  assert(token->type == TOKEN_NUM);
+  uint64_t dst = tmp(cs);
+  array_append(cs->code, &(Instruction){
+                             .type = INSTRUCTION_CONST,
+                             .value.constant =
+                                 (InstructionConst){
+                                     .dst = dst,
+                                     .value = token->value.num,
+                                 },
+                         });
+  return (CompileResult){
+      .dst = dst,
+      .type = TYPE_INT,
+  };
 }
 
 CompileResult compile_binop(Compiler* cs, Token* token) {
@@ -62,15 +144,14 @@ CompileResult compile_binop(Compiler* cs, Token* token) {
 
   // Compile operands
   uint64_t save = cs->stack;
-  CompileResult lhs_res = compile(cs, lhs);
-  CompileResult rhs_res = compile(cs, rhs);
+  CompileResult lhs_res = compile_expr_tmp(cs, lhs, false);
+  CompileResult rhs_res = compile_expr_tmp(cs, rhs, false);
   cs->stack = save;  // Discard temp vars. They'll already be in cs->code
 
   // Check types
   if (lhs_res.type != rhs_res.type) {
-    array_append(cs->errs, &(Error){
-                               .type = ERROR_DIFF_TYPES,
-                           });
+    perror("incompatiable types");
+    exit(EXIT_FAILURE);
   }
 
   // Code gen
@@ -82,108 +163,153 @@ CompileResult compile_binop(Compiler* cs, Token* token) {
                                      .op = op,
                                      .left = lhs_res,
                                      .right = rhs_res,
-                                     .reg = dst,
+                                     .dst = dst,
                                  },
                          });
 
   return (CompileResult){
-      .reg = dst,
+      .dst = dst,
       .type = lhs_res.type,
   };
 }
 
-CompileResult compile_list(Compiler* cs, Token* token) {
+CompileResult compile_expr_tmp(Compiler* cs, Token* token, bool allow_vars) {
+  // (a)
+  if (token->type == TOKEN_IDENTIFIER) {
+    return get_var(cs, token->value.identifier);
+  }
+
+  // Example: (1)
+  if (token->type == TOKEN_NUM) {
+    return compile_const(cs, token);
+  }
+
+  assert(token->type == TOKEN_LIST);
   uint64_t length = token->value.list.length;
+  if (length == 0) {
+    perror("empty list");
+    exit(EXIT_FAILURE);
+  }
 
   // Example: (+ 1 2)
-  if (token_is_op(token->value.list.data[0]->type) && length == 3) {
+  if (length == 3 && token_is_op(token->value.list.data[0]->type)) {
     return compile_binop(cs, token);
   }
 
+  // Example: (do ...)
+  if (token->value.list.data[0]->type == TOKEN_DO) {
+    return compile_scope(cs, token);
+  }
+
   // Example: (var a 1)
-  if (token->value.list.data[0]->type == TOKEN_VAR && length == 3) {
+  if (length == 3 && token->value.list.data[0]->type == TOKEN_VAR) {
+    if (!allow_vars) {
+      perror("variable declaration not allowed here");
+      exit(EXIT_FAILURE);
+    }
     return compile_var(cs, token);
   }
 
-  // Example: (do ...)
-  if (token->value.list.data[0]->type == TOKEN_DO && length > 1) {
-    return compile_do(cs, token);
+  // Example: (set a 1)
+  if (length == 3 && token->value.list.data[0]->type == TOKEN_SET) {
+    return compile_set(cs, token);
   }
 
-  return (CompileResult){
-      .reg = -1,
+  perror("unknown expression");
+  exit(EXIT_FAILURE);
+}
+
+CompileResult compile_scope(Compiler* cs, Token* token) {
+  enter_scope(cs);
+
+  CompileResult cr = (CompileResult){
+      .dst = -1,
       .type = TYPE_VOID,
+  };
+
+  for (uint64_t i = 1; i < token->value.list.length; i++) {
+    cr = compile_expr(cs, token->value.list.data[i], true);
+  }
+
+  leave_scope(cs);
+
+  if (cr.dst >= cs->stack) {
+    cr.dst = move_to(cs, cr.dst, tmp(cs));
+  }
+
+  return cr;
+}
+
+uint64_t move_to(Compiler* cs, uint64_t src, uint64_t dst) {
+  if (src != dst) {
+    array_append(cs->code, &(Instruction){
+                               .type = INSTRUCTION_MOV,
+                               .value.mov =
+                                   (InstructionMov){
+                                       .src = src,
+                                       .dst = dst,
+                                   },
+                           });
+  }
+
+  return dst;
+}
+
+CompileResult compile_var(Compiler* cs, Token* token) {
+  Token* name = token->value.list.data[1];
+  Token* value = token->value.list.data[2];
+
+  // Compile the right-hand side
+  CompileResult cr = compile_expr(cs, value, false);
+  if (cr.dst < 0) {
+    perror("unable to parse expression");
+    exit(EXIT_FAILURE);
+  }
+
+  // Variable names must be identifiers
+  if (name->type != TOKEN_IDENTIFIER) {
+    perror("name must be an identifier");
+    exit(EXIT_FAILURE);
+  }
+
+  uint64_t dst = add_var(cs, name->value.identifier, cr.type);
+  return (CompileResult){
+      .type = cr.type,
+      .dst = move_to(cs, cr.dst, dst),
+  };
+}
+
+CompileResult compile_set(Compiler* cs, Token* token) {
+  Token* name = token->value.list.data[1];
+  Token* value = token->value.list.data[2];
+
+  CompileResult dst_cr = get_var(cs, name->value.identifier);
+  CompileResult cr = compile_expr(cs, value, false);
+  if (dst_cr.type != cr.type) {
+    perror("right-hand side type does not match expected type");
+    exit(EXIT_FAILURE);
+  }
+  return (CompileResult){
+      .type = dst_cr.type,
+      .dst = move_to(cs, cr.dst, dst_cr.dst),
   };
 }
 
 Compiler new_compiler(void) {
   Compiler compiler = (Compiler){
-      .idents = array_new(10, sizeof(Identifier)),
-      .scopes = array_new(10, sizeof(uint64_t)),
       .code = array_new(10, sizeof(Instruction)),
-      .errs = array_new(10, sizeof(Error)),
       .stack = 0,
   };
 
   return compiler;
 }
 
-CompileResult compile(Compiler* cs, Token* token) {
-  if (token == NULL) {
-    array_append(cs->errs, &(Error){
-                               .type = ERROR_EMPTY_PROGRAM,
-                           });
-  }
-
-  switch (token->type) {
-    case TOKEN_LIST: {
-      return compile_list(cs, token);
-      break;
-    }
-    case TOKEN_NUM: {
-      uint64_t dst = tmp(cs);
-      array_append(cs->code, &(Instruction){
-                                 .type = INSTRUCTION_CONST,
-                                 .value.constant =
-                                     (InstructionConst){
-                                         .reg = dst,
-                                         .value = token->value.num,
-                                     },
-                             });
-      return (CompileResult){
-          .reg = dst,
-          .type = TYPE_INT,
-      };
-      break;
-    }
-
-    default: {
-      return (CompileResult){
-          .reg = -1,
-          .type = TYPE_VOID,
-      };
-      break;
-    }
-  }
-}
-
-void enter_scope(Compiler* cs) {
-  size_t length = array_length(cs->idents);
-  if (array_append(cs->scopes, &length) != 0) {
-    array_append(cs->errs, &(Error){
-                               .type = ERROR_MALLOC,
-                           });
-  }
-}
-
-void leave_scope(Compiler* cs) {
-  size_t* current_scope = (size_t*)array_pop(cs->scopes);
-  array_truncate(cs->idents, *current_scope);
-}
-
 bool is_defined(Compiler* cs, FatStr* str) {
-  for (size_t i = 0; i < array_length(cs->idents); i++) {
-    Identifier* cur = array_get(cs->idents, i);
+  Array* names = cs->scope->names;
+  size_t names_length = array_length(names);
+
+  for (size_t i = 0; i < names_length; i++) {
+    Identifier* cur = array_get(names, i);
     if (fatstr_cmp(&cur->name, str)) {
       return true;
     }
@@ -191,8 +317,6 @@ bool is_defined(Compiler* cs, FatStr* str) {
 
   return false;
 }
-
-uint64_t tmp(Compiler* cs) { return cs->stack++; }
 
 void instruction_to_string(Instruction* inst, char* buffer) {
   assert(inst != NULL);
@@ -202,7 +326,7 @@ void instruction_to_string(Instruction* inst, char* buffer) {
     case INSTRUCTION_CONST: {
       char num[100];
       sprintf(num, "const %lld %lld\n", inst->value.constant.value,
-              inst->value.constant.reg);
+              inst->value.constant.dst);
       strcat(buffer, num);
       break;
     }
@@ -211,14 +335,15 @@ void instruction_to_string(Instruction* inst, char* buffer) {
       token_to_string(inst->value.binop.op, tkn_buffer);
       char op[100] = {0};
       sprintf(op, "binop %s %lld %lld %lld\n", tkn_buffer,
-              inst->value.binop.left.reg, inst->value.binop.right.reg,
-              inst->value.binop.reg);
+              inst->value.binop.left.dst, inst->value.binop.right.dst,
+              inst->value.binop.dst);
       strcat(buffer, op);
       break;
     }
     case INSTRUCTION_MOV: {
-      sprintf(buffer, "mov %lld %lld\n", inst->value.mov.dst,
-              inst->value.mov.reg);
+      char mov[100] = {0};
+      sprintf(mov, "mov %lld %lld\n", inst->value.mov.src, inst->value.mov.dst);
+      strcat(buffer, mov);
       break;
     }
     default: {
@@ -227,24 +352,9 @@ void instruction_to_string(Instruction* inst, char* buffer) {
   }
 }
 
-uint64_t move_to(Compiler* cs, uint64_t reg, uint64_t dst) {
-  if (reg != dst) {
-    array_append(cs->code, &(Instruction){
-                               .type = INSTRUCTION_MOV,
-                               .value.mov =
-                                   (InstructionMov){
-                                       .reg = reg,
-                                       .dst = dst,
-                                   },
-                           });
-  }
-
-  return dst;
-}
-
 bool ident_cmp(Identifier* i1, Identifier* i2) {
-  return fatstr_cmp(&i1->name, &i2->name) && i1->reg == i2->reg &&
-         i1->type == i2->type;
+  return fatstr_cmp(&i1->name, &i2->name) &&
+         compile_result_cmp(&i1->cr, &i2->cr);
 }
 
 bool instruction_cmp(Instruction* i1, Instruction* i2) {
@@ -254,20 +364,20 @@ bool instruction_cmp(Instruction* i1, Instruction* i2) {
 
   switch (i1->type) {
     case INSTRUCTION_CONST: {
-      return i1->value.constant.reg == i2->value.constant.reg &&
+      return i1->value.constant.dst == i2->value.constant.dst &&
              i1->value.constant.value == i2->value.constant.value;
       break;
     }
     case INSTRUCTION_BINOP: {
       return compile_result_cmp(&i1->value.binop.left, &i2->value.binop.left) &&
              tkncmp(i1->value.binop.op, i2->value.binop.op) &&
-             i1->value.binop.reg == i2->value.binop.reg &&
+             i1->value.binop.dst == i2->value.binop.dst &&
              compile_result_cmp(&i1->value.binop.right, &i2->value.binop.right);
       break;
     }
     case INSTRUCTION_MOV: {
       return i1->value.mov.dst == i2->value.mov.dst &&
-             i1->value.mov.reg == i2->value.mov.reg;
+             i1->value.mov.dst == i2->value.mov.dst;
       break;
     }
     default: {
@@ -278,5 +388,62 @@ bool instruction_cmp(Instruction* i1, Instruction* i2) {
 }
 
 bool compile_result_cmp(CompileResult* c1, CompileResult* c2) {
-  return c1->reg == c2->reg && c1->type == c2->type;
+  return c1->dst == c2->dst && c1->type == c2->type;
+}
+
+bool scope_cmp(Scope* s1, Scope* s2) {
+  if (s1 == NULL && s2 == NULL) {
+    return true;
+  }
+
+  if ((s1 == NULL && s2 != NULL) || (s1 != NULL && s2 == NULL)) {
+    return false;
+  }
+
+  if (s1->nlocal != s2->nlocal || s1->save != s2->save) {
+    return false;
+  }
+
+  size_t length1 = array_length(s1->names);
+  size_t length2 = array_length(s2->names);
+
+  if (length1 != length2) {
+    return false;
+  }
+
+  for (size_t i = 0; i < length1; i++) {
+    Identifier* ident1 = array_get(s1->names, i);
+    Identifier* ident2 = array_get(s2->names, i);
+    if (!ident_cmp(ident1, ident2)) {
+      return false;
+    }
+  }
+
+  return scope_cmp(s1->prev, s2->prev);
+}
+
+bool compiler_cmp(Compiler* c1, Compiler* c2) {
+  if (!scope_cmp(c1->scope, c2->scope)) {
+    return false;
+  }
+
+  uint64_t code_length1 = array_length(c1->code);
+  uint64_t code_length2 = array_length(c2->code);
+
+  if (code_length1 != code_length2 || c1->stack != c2->stack ||
+      c1->nvar != c2->nvar) {
+    return false;
+  }
+
+  // Compare each instruction
+  for (size_t i = 0; i < code_length1; i++) {
+    Instruction* inst1 = array_get(c1->code, i);
+    Instruction* inst2 = array_get(c2->code, i);
+
+    if (!instruction_cmp(inst1, inst2)) {
+      return false;
+    }
+  }
+
+  return true;
 }

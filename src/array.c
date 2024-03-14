@@ -57,6 +57,7 @@ int array_append(Array* array, void* element) {
   }
 
   // Copy the new element to the end of the array
+  // Lifetime of element does not matter since we copy
   void* destination =
       (char*)array->data + (array->length * array->element_size);
   memcpy(destination, element, array->element_size);
