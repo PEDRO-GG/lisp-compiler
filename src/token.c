@@ -25,6 +25,7 @@ static const Keyword keywords[] = {
     [TOKEN_ELSE] = {"else", sizeof("else")},
     [TOKEN_LOOP] = {"loop", sizeof("loop")},
     [TOKEN_BREAK] = {"break", sizeof("break")},
+    [TOKEN_CONTINUE] = {"continue", sizeof("continue")},
     [TOKEN_RETURN] = {"return", sizeof("return")},
     [TOKEN_TERNARY] = {"?", sizeof("?")},
     [TOKEN_VAR] = {"var", sizeof("var")},

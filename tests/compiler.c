@@ -16,15 +16,9 @@ void run_compiler_test(const char* input, const char* expected,
   Compiler cs = new_compiler();
   compile_expr(&cs, tkn, false);
 
-  // Convert instructions to string
-  char buffer[1024] = {0};
-  for (size_t i = 0; i < array_length(cs.code); i++) {
-    Instruction* inst = array_get(cs.code, i);
-    instruction_to_string(inst, buffer);
-  }
-
   // Test
-  bool res = strcmp(buffer, expected) == 0;
+  Array* buffer = dump_ir(&cs);
+  bool res = array_compare_with_string(buffer, expected);
   TEST_EQ(res, true);
 
   // Compare expected state with returned state;
@@ -162,11 +156,35 @@ void test_binop(void) {
                     NULL);
 }
 
+void test_if(void) {
+  run_compiler_test(
+      "(do "
+      "    (var a 100) "
+      "    (if (eq a 200) (set a 300) (set a 400))"
+      "    a"
+      ")",
+      "const 100 0\n"
+      "const 200 1\n"
+      "binop eq 0 1 1\n"
+      "jmpf 1 L1\n"
+      "const 300 1\n"
+      "mov 1 0\n"
+      "mov 0 1\n"
+      "jmp L0\n"
+      "L1:\n"
+      "const 400 1\n"
+      "mov 1 0\n"
+      "mov 0 1\n"
+      "L0:\n",
+      NULL);
+}
+
 int main(void) {
   ADD_TEST(test_num);
   ADD_TEST(test_var);
   ADD_TEST(test_set);
   ADD_TEST(test_binop);
+  ADD_TEST(test_if);
   RUN_TESTS();
   return exit_code();
 }

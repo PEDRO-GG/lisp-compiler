@@ -11,6 +11,9 @@ typedef struct Instruction Instruction;
 typedef struct InstructionConst InstructionConst;
 typedef struct InstructionBinOP InstructionBinOP;
 typedef struct InstructionMov InstructionMov;
+typedef struct InstructionJmp InstructionJmp;
+typedef struct InstructionJmpf InstructionJmpf;
+typedef size_t Label;
 
 typedef enum {
   TYPE_INT,
@@ -34,6 +37,8 @@ typedef enum {
   INSTRUCTION_CONST,
   INSTRUCTION_BINOP,
   INSTRUCTION_MOV,
+  INSTRUCTION_JMP,
+  INSTRUCTION_JMPF,
 } InstructionType;
 
 struct InstructionConst {
@@ -44,6 +49,15 @@ struct InstructionConst {
 struct InstructionMov {
   uint64_t src;
   uint64_t dst;
+};
+
+struct InstructionJmp {
+  Label label;
+};
+
+struct InstructionJmpf {
+  uint64_t dst;
+  Label label;
 };
 
 struct InstructionBinOP {
@@ -59,6 +73,8 @@ struct Instruction {
     struct InstructionConst constant;
     struct InstructionBinOP binop;
     struct InstructionMov mov;
+    struct InstructionJmp jmp;
+    struct InstructionJmpf jmpf;
   } value;
 };
 
@@ -67,11 +83,14 @@ typedef struct Scope {
   uint64_t nlocal;
   uint64_t save;
   Array* names;  // []Identifier
+  uint64_t loop_start;
+  uint64_t loop_end;
 } Scope;
 
 typedef struct {
-  Scope* scope;  // Current scope
-  Array* code;   // Array of instructions
+  Scope* scope;   // Current scope
+  Array* code;    // []Instruction
+  Array* labels;  // []Label
   int64_t nvar;
   int64_t stack;
 } Compiler;
@@ -81,6 +100,8 @@ void leave_scope(Compiler* cs);
 uint64_t add_var(Compiler* cs, FatStr name, ValueType type);
 CompileResult get_var(Compiler* cs, FatStr name);
 uint64_t tmp(Compiler* cs);
+size_t new_label(Compiler* cs);
+void set_label(Compiler* cs, Label label);
 Scope* new_scope(Scope* prev);
 CompileResult scope_get_var(Scope* scope, FatStr name);
 CompileResult compile_expr(Compiler* cs, Token* token, bool allow_vars);
@@ -91,9 +112,12 @@ CompileResult compile_scope(Compiler* cs, Token* token);
 uint64_t move_to(Compiler* cs, uint64_t src, uint64_t dst);
 CompileResult compile_var(Compiler* cs, Token* token);
 CompileResult compile_set(Compiler* cs, Token* token);
+CompileResult compile_if(Compiler* cs, Token* token);
+CompileResult compile_loop(Compiler* cs, Token* token);
 Compiler new_compiler(void);
 bool is_defined(Compiler* cs, FatStr* str);
 void instruction_to_string(Instruction* inst, char* buffer);
+Array* dump_ir(Compiler* cs);
 bool ident_cmp(Identifier* i1, Identifier* i2);
 bool instruction_cmp(Instruction* i1, Instruction* i2);
 bool compile_result_cmp(CompileResult* c1, CompileResult* c2);

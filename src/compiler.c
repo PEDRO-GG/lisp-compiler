@@ -59,6 +59,21 @@ uint64_t tmp(Compiler* cs) {
   return dst;
 }
 
+size_t new_label(Compiler* cs) {
+  size_t length = array_length(cs->labels);
+  array_append(cs->labels, &length);
+  return length;
+}
+
+void set_label(Compiler* cs, Label label) {
+  size_t labels_length = array_length(cs->labels);
+  assert(label < labels_length);
+
+  size_t* to_change = array_get(cs->labels, label);
+  size_t code_length = array_length(cs->code);
+  (*to_change) = code_length;
+}
+
 Scope* new_scope(Scope* prev) {
   Scope* scope = malloc(sizeof(Scope));
   if (scope == NULL) {
@@ -69,6 +84,8 @@ Scope* new_scope(Scope* prev) {
   scope->prev = prev;
   scope->nlocal = 0;
   scope->save = 0;
+  scope->loop_start = prev ? prev->loop_start : -1;
+  scope->loop_end = prev ? prev->loop_end : -1;
 
   scope->names = array_new(20, sizeof(Identifier));
   if (scope->names == NULL) {
@@ -174,12 +191,12 @@ CompileResult compile_binop(Compiler* cs, Token* token) {
 }
 
 CompileResult compile_expr_tmp(Compiler* cs, Token* token, bool allow_vars) {
-  // (a)
+  // Example: a
   if (token->type == TOKEN_IDENTIFIER) {
     return get_var(cs, token->value.identifier);
   }
 
-  // Example: (1)
+  // Example: 1
   if (token->type == TOKEN_NUM) {
     return compile_const(cs, token);
   }
@@ -213,6 +230,56 @@ CompileResult compile_expr_tmp(Compiler* cs, Token* token, bool allow_vars) {
   // Example: (set a 1)
   if (length == 3 && token->value.list.data[0]->type == TOKEN_SET) {
     return compile_set(cs, token);
+  }
+
+  // Example: (if condition yes)
+  // Example: (if condition yes no)
+  if ((length == 3 || length == 4) &&
+      token->value.list.data[0]->type == TOKEN_IF) {
+    return compile_if(cs, token);
+  }
+
+  // Example: (loop condition body)
+  if (length == 3 && token->value.list.data[0]->type == TOKEN_LOOP) {
+    return compile_loop(cs, token);
+  }
+
+  // Example: break
+  if (token->value.list.data[0]->type == TOKEN_BREAK) {
+    if (cs->scope->loop_end < 0) {
+      perror("`break` outside a loop");
+      exit(EXIT_FAILURE);
+    }
+    array_append(cs->code, &(Instruction){
+                               .type = INSTRUCTION_JMP,
+                               .value.jmp =
+                                   (InstructionJmp){
+                                       .label = cs->scope->loop_end,
+                                   },
+                           });
+    return (CompileResult){
+        .dst = -1,
+        .type = TYPE_VOID,
+    };
+  }
+
+  // Example: continue
+  if (token->value.list.data[0]->type == TOKEN_CONTINUE) {
+    if (cs->scope->loop_start < 0) {
+      perror("`continue` outside a loop");
+      exit(EXIT_FAILURE);
+    }
+    array_append(cs->code, &(Instruction){
+                               .type = INSTRUCTION_JMP,
+                               .value.jmp =
+                                   (InstructionJmp){
+                                       .label = cs->scope->loop_start,
+                                   },
+                           });
+    return (CompileResult){
+        .dst = -1,
+        .type = TYPE_VOID,
+    };
   }
 
   perror("unknown expression");
@@ -295,9 +362,139 @@ CompileResult compile_set(Compiler* cs, Token* token) {
   };
 }
 
+CompileResult compile_if(Compiler* cs, Token* token) {
+  uint64_t length = token->value.list.length;
+  Token* cond = token->value.list.data[1];
+  Token* yes = token->value.list.data[2];
+  Token* no = NULL;
+  if (length == 4) {
+    no = token->value.list.data[3];
+  }
+
+  Label l_true = new_label(cs);
+  Label l_false = new_label(cs);
+
+  enter_scope(cs);
+
+  // Compile the condition
+  CompileResult cond_cr = compile_expr(cs, cond, true);
+  if (cond_cr.type == TYPE_VOID) {
+    perror("expect boolean condition");
+    exit(EXIT_FAILURE);
+  }
+
+  array_append(cs->code, &(Instruction){
+                             .type = INSTRUCTION_JMPF,
+                             .value.jmpf =
+                                 (InstructionJmpf){
+                                     // go to `else` if false
+                                     .dst = cond_cr.dst,
+                                     .label = l_false,
+                                 },
+                         });
+
+  // Compile the if body
+  CompileResult body_cr = compile_expr(cs, yes, false);
+  if (body_cr.dst >= 0) {
+    move_to(cs, body_cr.dst, cs->stack);
+  }
+
+  CompileResult else_cr = (CompileResult){
+      .dst = -1,
+      .type = TYPE_VOID,
+  };
+
+  // Add JMP
+  if (no) {
+    array_append(cs->code, &(Instruction){
+                               .type = INSTRUCTION_JMP,
+                               .value.jmp =
+                                   (InstructionJmp){
+                                       // skip `else` if true
+                                       .label = l_true,
+                                   },
+                           });
+  }
+
+  set_label(cs, l_false);
+
+  // Compile else
+  if (no) {
+    else_cr = compile_expr(cs, no, false);
+    if (else_cr.dst >= 0) {
+      move_to(cs, else_cr.dst, cs->stack);
+    }
+  }
+
+  set_label(cs, l_true);
+
+  leave_scope(cs);
+
+  if (body_cr.dst < 0 || else_cr.dst < 0 || body_cr.type != else_cr.type) {
+    return (CompileResult){
+        .dst = -1,
+        .type = TYPE_VOID,
+    };
+  }
+
+  return (CompileResult){
+      .dst = tmp(cs),
+      .type = body_cr.type,
+  };
+}
+
+CompileResult compile_loop(Compiler* cs, Token* token) {
+  Token* cond = token->value.list.data[1];
+  Token* body = token->value.list.data[2];
+
+  cs->scope->loop_start = new_label(cs);
+  cs->scope->loop_end = new_label(cs);
+
+  enter_scope(cs);
+
+  set_label(cs, cs->scope->loop_start);
+
+  // Compile the condition
+  CompileResult cond_cr = compile_expr(cs, cond, true);
+  if (cond_cr.dst < 0) {
+    perror("expect boolean condition");
+    exit(EXIT_FAILURE);
+  }
+
+  // Add the jmpf
+  array_append(cs->code, &(Instruction){
+                             .type = INSTRUCTION_JMPF,
+                             .value.jmpf =
+                                 (InstructionJmpf){
+                                     .label = cs->scope->loop_end,
+                                 },
+                         });
+
+  // Compile the body
+  compile_expr(cs, body, true);
+  array_append(cs->code, &(Instruction){
+                             .type = INSTRUCTION_JMP,
+                             .value.jmp =
+                                 (InstructionJmp){
+                                     .label = cs->scope->loop_start,
+                                 },
+                         });
+
+  set_label(cs, cs->scope->loop_end);
+  leave_scope(cs);
+
+  return (CompileResult){
+      .dst = -1,
+      .type = TYPE_VOID,
+  };
+}
+
 Compiler new_compiler(void) {
   Compiler compiler = (Compiler){
+      .scope = new_scope(NULL),
       .code = array_new(10, sizeof(Instruction)),
+      .labels = array_new(10, sizeof(Label)),
+      .nvar = 0,
       .stack = 0,
   };
 
@@ -346,10 +543,54 @@ void instruction_to_string(Instruction* inst, char* buffer) {
       strcat(buffer, mov);
       break;
     }
+    case INSTRUCTION_JMP: {
+      char jmp[100] = {0};
+      sprintf(jmp, "jmp L%zu\n", inst->value.jmp.label);
+      strcat(buffer, jmp);
+      break;
+    }
+    case INSTRUCTION_JMPF: {
+      char jmpf[100] = {0};
+      sprintf(jmpf, "jmpf %llu L%zu\n", inst->value.jmpf.dst,
+              inst->value.jmpf.label);
+      strcat(buffer, jmpf);
+      break;
+    }
     default: {
       break;
     }
   }
+}
+
+Array* dump_ir(Compiler* cs) {
+  Array* buffer = array_new(1024, sizeof(char));  // Holds our string
+
+  for (size_t i = 0; i < array_length(cs->code); i++) {
+    // Check if we should place a label
+    for (size_t j = 0; j < array_length(cs->labels); j++) {
+      Label* l = array_get(cs->labels, j);
+      if (*l == i) {
+        array_append_fmt(buffer, "L%zu:\n", j);
+      }
+    }
+
+    // Stringify the instruction
+    Instruction* inst = array_get(cs->code, i);
+    char inst_buffer[100] = {0};
+    instruction_to_string(inst, inst_buffer);
+    array_append_fmt(buffer, "%s", inst_buffer);
+  }
+
+  // Place the last label
+  for (size_t i = 0; i < array_length(cs->labels); i++) {
+    Label* l = array_get(cs->labels, i);
+    if (*l == array_length(cs->code)) {
+      array_append_fmt(buffer, "L%zu:\n", i);
+      break;
+    }
+  }
+
+  return buffer;
 }
 
 bool ident_cmp(Identifier* i1, Identifier* i2) {
