@@ -273,6 +273,7 @@ void test_char_array_fmt(void) {
   array_append_fmt(array, "The numbers are: %d, %d, and %d", 1, 2, 3);
   bool res = array_compare_with_string(array, "The numbers are: 1, 2, and 3");
   TEST_EQ(res, true);
+  TEST_STRCMP(array_to_str(array), "The numbers are: 1, 2, and 3");
 }
 
 void test_array_cmp(void) {

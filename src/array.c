@@ -1,5 +1,6 @@
 #include "array.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -185,6 +186,13 @@ int array_append_fmt(Array* array, const char* format, ...) {
   va_end(args);
 
   return 0;  // Success
+}
+
+char* array_to_str(Array* array) {
+  assert(array->element_size == sizeof(char));
+  char nul = '\0';
+  array_append(array, &nul);
+  return (char*)array->data;
 }
 
 // Function to compare array content with a string

@@ -16,6 +16,7 @@ void* array_pop(Array* array);
 int array_truncate(Array* array, size_t n);
 size_t array_length(Array* array);
 int array_append_str(Array* array, const char* str);
+char* array_to_str(Array* array);
 int array_append_fmt(Array* array, const char* format, ...);
 bool array_compare_with_string(Array* array, const char* str);
 bool array_cmp(Array* arr1, Array* arr2);
