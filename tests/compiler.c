@@ -18,14 +18,13 @@ void run_compiler_test(const char* input, const char* expected,
 
   // Test
   Array* buffer = dump_ir(&cs);
-  bool res = array_compare_with_string(buffer, expected);
-  TEST_EQ(res, true);
+  TEST_STRCMP(array_to_str(buffer), expected);
 
   // Compare expected state with returned state;
   if (expected_state == NULL) {
     return;
   }
-  res = compiler_cmp(&cs, expected_state);
+  bool res = compiler_cmp(&cs, expected_state);
   TEST_EQ(res, true);
 }
 
@@ -179,12 +178,35 @@ void test_if(void) {
       NULL);
 }
 
+void test_loop(void) {
+  run_compiler_test(
+      "(do "
+      "    (var a 10) "
+      "    (loop "
+      "        (gt a 0) "
+      "        (set a (- a 1))"
+      "    )"
+      ")",
+      "const 10 0\n"
+      "L0:\n"
+      "const 0 1\n"
+      "binop gt 0 1 1\n"
+      "jmpf 1 L1\n"
+      "const 1 1\n"
+      "binop - 0 1 1\n"
+      "mov 1 0\n"
+      "jmp L0\n"
+      "L1:\n",
+      NULL);
+}
+
 int main(void) {
   ADD_TEST(test_num);
   ADD_TEST(test_var);
   ADD_TEST(test_set);
   ADD_TEST(test_binop);
   ADD_TEST(test_if);
+  ADD_TEST(test_loop);
   RUN_TESTS();
   return exit_code();
 }

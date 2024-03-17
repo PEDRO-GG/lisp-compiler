@@ -466,6 +466,7 @@ CompileResult compile_loop(Compiler* cs, Token* token) {
                              .type = INSTRUCTION_JMPF,
                              .value.jmpf =
                                  (InstructionJmpf){
+                                     .dst = cond_cr.dst,
                                      .label = cs->scope->loop_end,
                                  },
                          });
